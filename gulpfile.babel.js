@@ -8,7 +8,7 @@ import minimist from 'minimist';
 import runSequence from 'run-sequence';
 import pngquant from 'imagemin-pngquant';
 import del from 'del';
-import autoprefixer from 'autoprefixer-core'
+import autoprefixer from 'autoprefixer-core';
 import vsource from 'vinyl-source-stream';
 import buffer from 'vinyl-buffer';
 import es from 'event-stream';
@@ -69,7 +69,7 @@ let dirToObj = (filepath) => {
     return parseDirectory(filepath, dataObj);
   }
   catch (e) {
-    return {_data: {}}
+    return {_data: {}};
   }
 };
 
