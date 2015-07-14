@@ -1,10 +1,10 @@
 // Main javascript entry point
 // Should handle bootstrapping/starting application
 
-'use strict';
+'use strict'
 
-import $ from 'jquery';
+import $ from 'jquery'
 
 $(() => {
-  console.log('Welcome to Yeogurt!');
-});
+  console.log('Welcome to Yeogurt!')
+})

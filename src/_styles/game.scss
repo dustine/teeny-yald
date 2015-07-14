@@ -1,0 +1,20 @@
+@import "_game";
+
+body {
+  background: #001527;
+}
+
+.title-header {
+  color: #eeeeee;
+  text-align: center;
+}
+
+#bottom-gradient {
+  position: absolute;
+  bottom: 0%;
+  height: 10%;
+  width: 100%;
+  background: linear-gradient(to bottom, #001527 0%, #002244 60%, #003366 100%);
+  pointer-events: none;
+  z-index: -1000;
+}

@@ -1,0 +1,49 @@
+extend ./base
+
+// Add extra stylesheets
+block append stylesheets
+  link(rel='stylesheet', href= config.baseUrl + 'styles/game.css')
+
+mixin counter(number, separator)
+  .counter.clearfix
+    - function range (to, start) {
+    -   var result = [];
+    -   start = start ? start : 0;
+    -   for (var i = start; i < to; result.push(i++)) {}
+    -   return result;
+    - }
+    - var count = range(number)
+    each n in range(number)
+      if separator && n!== 0 && (number - n) % 3 === 0
+        span.separator
+          = separator
+      .digit -
+
+block content
+  //- Provides layout level markup
+  p.
+    Hello everyone, I'm here to be a jerk
+
+  .layout-wrapper.game
+    block game
+      .score-display
+        .segmented-counter.score-counter
+          .head.-icon: span.icon- power
+          +counter(20, '.')
+          .tail Teeny Yald
+      .view-frame#animated-sansa
+      .progress-display
+        .segmented-counter.loop-counter
+          .head.-icon: span-.icon- loop
+          +counter(4)
+        .timeline-bar
+          .timeline
+            canvas#tb-display
+            canvas#tb-hits
+            canvas#tb-progress
+  div#bottom-gradient
+
+// Add extra scripts
+block append scripts
+  script(src = config.baseUrl + 'scripts/vendor/crafty-0.6.4.js')
+  script(src = config.baseUrl + 'scripts/game.js')

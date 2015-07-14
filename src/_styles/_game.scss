@@ -1,0 +1,153 @@
+@import "_helper";
+
+// game styles
+.layout-wrapper.game {
+  // TODO: Uncomment this to prevent (most) selection events
+  pointer-events: none;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 1.2em 0.4em #0088ff;
+  border-radius: 0.5rem;
+  background: rgb(245,246,246);
+}
+
+.layout-wrapper.game > .score-display {
+    border-radius: 0.5em 0.5em 0 0;
+  }
+
+.layout-wrapper.game > .view-frame {
+  pointer-events: auto;
+  /*width: 800px;
+  height: 450px;*/
+  width: 1000px;
+  height: 600px;
+  margin: 0 0.3em 0 0.3em;
+  background: black;
+  border-radius: 0.5em;
+}
+
+.layout-wrapper.game > .progress-display {
+  border-radius: 0 0 0.5em 0.5em;
+}
+
+$metal-gradient: linear-gradient(to bottom,  rgba(245,246,246,1) 0%,rgba(219,220,226,1) 21%,rgba(184,186,198,1) 49%,rgba(221,223,227,1) 80%,rgba(245,246,246,1) 100%);
+
+.score-display,
+.progress-display {
+  background: $metal-gradient;
+}
+
+.progress-display {
+  vertical-align: top;
+  width: 100%;
+  display: table;
+  border-radius: 0 0 0.5rem 0.5em;
+}
+
+.progress-display > .segmented-counter,
+.progress-display > .timeline-bar  {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.progress-display > .loop-counter {
+  border-right: solid thick #b8bac6;
+  width: 6.8em;
+}
+
+.progress-display > .timeline-bar {
+  padding: 0 0.5em
+}
+
+.progress-display > .progress-counter {
+  width: 7.7em;
+}
+
+.segmented-counter {
+  @extend .clearfix;
+  padding: 0.2em 0.3em 0.2em 0.2em;
+}
+
+.segmented-counter > .head,
+.segmented-counter > .tail {
+  margin: 0 0.35em 0 0.35em;
+  text-align: center;
+}
+
+.segmented-counter > .head {
+  float: left;
+}
+
+.segmented-counter > .-icon {
+  padding-top: 0.1em;
+}
+
+.segmented-counter > .counter {
+  display: table;
+  float: left;
+}
+
+.segmented-counter > .tail {
+  float: right;
+  text-align: center;
+}
+
+.segmented-counter > .counter > .digit {
+  display: table-cell;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(to bottom,  rgba(0,0,0,1) 0%,rgba(128,128,128,1) 40%,rgba(169,169,169,1) 60%,rgba(0,0,0,1) 100%);
+  border: solid thin #222;
+  text-align: center;
+  width: 1em;
+}
+
+.segmented-counter > .counter > .digit + .digit {
+  border-left-style: none;
+}
+
+.segmented-counter > .counter.-separate > .digit.-left,
+.segmented-counter > .counter > .digit:first-of-type {
+  border-top-left-radius: 0.3em;
+  border-bottom-left-radius: 0.3em;
+  border-left-style: solid;
+}
+
+.segmented-counter > .counter.-separate > .digit.-right,
+.segmented-counter > .counter > .digit:last-of-type {
+  border-top-right-radius: 0.3em;
+  border-bottom-right-radius: 0.3em;
+}
+
+.segmented-counter > .counter.-separate > .separator,
+.segmented-counter > .counter.-separate > .decimal {
+  margin: 0 0.1em 0 0.1em;
+}
+
+.timeline-bar > .timeline{
+  position: relative;
+}
+
+.timeline > canvas {
+  position: absolute;
+  display: block;
+  margin: 0 auto;
+}
+
+.timeline > #tb-display {
+  z-index: 15;
+  box-shadow: inset 0 0 1em 0.4em rgba(0, 0, 0, 0.5);;
+}
+
+.timeline > #tb-hits {
+  z-index: 10;
+}
+
+.timeline > #tb-progress {
+  z-index: 5;
+  background: #eee;
+}

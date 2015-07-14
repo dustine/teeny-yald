@@ -1,3 +1,5 @@
+/* eslint */
+
 import fs from 'fs';
 import path from 'path';
 import gulp from 'gulp';
@@ -5,8 +7,8 @@ import gulpLoadPlugins from 'gulp-load-plugins';
 import browserSyncLib from 'browser-sync';
 import pjson from './package.json';
 import minimist from 'minimist';
-import runSequence from 'run-sequence';
-import pngquant from 'imagemin-pngquant';
+import runSequence from 'run-sequence'
+import pngquant from 'imagemin-pngquant'
 import del from 'del';
 import autoprefixer from 'autoprefixer-core';
 import vsource from 'vinyl-source-stream';
@@ -82,7 +84,7 @@ gulp.task('jade', () => {
     path.join(__dirname, dirs.source, '**/*.jade'),
     path.join('!', __dirname, dirs.source, '{**/\_*,**/\_*/**}')
   ])
-  .pipe(plugins.changed(dest))
+  // .pipe(plugins.changed(dest))
   .pipe(plugins.jade({
     jade: jade,
     locals: {
@@ -161,6 +163,23 @@ gulp.task('browserify', () => {
     ]
   }).bundle()
     .pipe(vsource(path.basename('main.js')))
+    .pipe(buffer())
+    .pipe(plugins.sourcemaps.init({loadMaps: true}))
+      .pipe(gulpif(production, plugins.uglify()))
+      .on('error', plugins.util.log)
+    .pipe(plugins.sourcemaps.write('./'))
+    .pipe(gulp.dest(dest))
+    .pipe(browserSync.stream());
+
+  browserify(
+    path.join(__dirname, dirs.source, dirs.scripts, '/game.js'), {
+    debug: true,
+    transform: [
+      require('envify'),
+      require('babelify')
+    ]
+  }).bundle()
+    .pipe(vsource(path.basename('game.js')))
     .pipe(buffer())
     .pipe(plugins.sourcemaps.init({loadMaps: true}))
       .pipe(gulpif(production, plugins.uglify()))
