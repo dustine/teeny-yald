@@ -1,4 +1,3 @@
-/* global Crafty */
 'use strict'
 
 import $ from 'jquery'
@@ -35,8 +34,13 @@ function formatTime (ms) {
 }
 
 $(() => {
+  var $container = $('.timeline')
+  var display = $('.timeline > .display')[0]
+  var hits = $('.timeline > .hits')[0]
+  var progress = $('.timeline > .progress')[0]
+
   // TODO: make this a module
-  (function loadFrame () {
+  ;(function loadFrame ($container, display, hits, progress) {
     (function addCorrectBorderRadiusToDigits () {
       function addIntegerBorderRadius (length, i, elem) {
         i = length - i - 1
@@ -58,11 +62,6 @@ $(() => {
     }())
 
     // initialize canvas
-    var $container = $('.timeline')
-    var display = $('#tb-display')[0]
-    var hits = $('#tb-hits')[0]
-    var progress = $('#tb-progress')[0]
-
     console.log($container.parent(), $container.parent().height())
 
     var CANVAS_WIDTH = $container.width()
@@ -94,12 +93,12 @@ $(() => {
         context.stroke()
       }
     }
-  })()
+  })($container, display, hits, progress)
 
   // var $container = $('.timeline')
   // var display = $('#tb-display')[0]
-  var hits = $('#tb-hits')[0]
-  var progress = $('#tb-progress')[0]
+  // var hits = $('#tb-hits')[0]
+  // var progress = $('#tb-progress')[0]
 
   function updateTimebarHits (current, total, color) {
     color = color || 'red'

@@ -82,14 +82,14 @@ gulp.task('jade', () => {
   let siteData = dirToObj(path.join(__dirname, dirs.source, dirs.data));
   return gulp.src([
     path.join(__dirname, dirs.source, '**/*.jade'),
-    path.join('!', __dirname, dirs.source, '{**/\_*,**/\_*/**}')
+    '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}')
   ])
   // .pipe(plugins.changed(dest))
   .pipe(plugins.jade({
     jade: jade,
     locals: {
       config: config,
-      debug: true,
+      debug: !production,
       site: {
         data: siteData[dirs.data]
       }
@@ -129,7 +129,7 @@ gulp.task('eslint', () => {
     path.join(__dirname, 'gulpfile.js'),
     path.join(__dirname, dirs.source, '**/*.js'),
     // Ignore all vendor folder files
-    path.join('!', __dirname, '**/vendor/**', '*')
+    '!' + path.join(__dirname, '**/vendor/**', '*')
   ])
   .pipe(browserSync.reload({stream: true, once: true}))
   .pipe(plugins.eslint({
@@ -152,41 +152,27 @@ gulp.task('imagemin', () => {
     .pipe(gulp.dest(dest));
 });
 
-gulp.task('browserify', () => {
+gulp.task('browserify', (cb) => {
   let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''));
-  browserify(
-    path.join(__dirname, dirs.source, dirs.scripts, '/main.js'), {
-    debug: true,
-    transform: [
-      require('envify'),
-      require('babelify')
-    ]
-  }).bundle()
-    .pipe(vsource(path.basename('main.js')))
-    .pipe(buffer())
-    .pipe(plugins.sourcemaps.init({loadMaps: true}))
-      .pipe(gulpif(production, plugins.uglify()))
-      .on('error', plugins.util.log)
-    .pipe(plugins.sourcemaps.write('./'))
-    .pipe(gulp.dest(dest))
-    .pipe(browserSync.stream());
-
-  browserify(
-    path.join(__dirname, dirs.source, dirs.scripts, '/game.js'), {
-    debug: true,
-    transform: [
-      require('envify'),
-      require('babelify')
-    ]
-  }).bundle()
-    .pipe(vsource(path.basename('game.js')))
-    .pipe(buffer())
-    .pipe(plugins.sourcemaps.init({loadMaps: true}))
-      .pipe(gulpif(production, plugins.uglify()))
-      .on('error', plugins.util.log)
-    .pipe(plugins.sourcemaps.write('./'))
-    .pipe(gulp.dest(dest))
-    .pipe(browserSync.stream());
+  for (var filepath of config.mainScripts) {
+    browserify(
+      path.join(__dirname, dirs.source, dirs.scripts, filepath), {
+      debug: true,
+      transform: [
+        require('envify'),
+        require('babelify')
+      ]
+    }).bundle()
+      .pipe(vsource(path.basename(filepath)))
+      .pipe(buffer())
+      .pipe(plugins.sourcemaps.init({loadMaps: true}))
+        .pipe(gulpif(production, plugins.uglify()))
+        .on('error', plugins.util.log)
+      .pipe(plugins.sourcemaps.write('./'))
+      .pipe(gulp.dest(dest))
+      .pipe(browserSync.stream());
+  }
+  return cb();
 });
 
 // Clean
@@ -200,8 +186,8 @@ gulp.task('copy', () => {
   let dest = path.join(__dirname, taskTarget);
   return gulp.src([
       path.join(__dirname, dirs.source, '**/*'),
-      path.join('!', __dirname, dirs.source, '{**/\_*,**/\_*/**}'),
-      path.join('!', __dirname, dirs.source, '**/*.jade')
+      '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}'),
+      '!' + path.join(__dirname, dirs.source, '**/*.jade')
     ])
     .pipe(plugins.changed(dest))
     .pipe(gulp.dest(dest));
@@ -262,8 +248,8 @@ gulp.task('serve', [
       // Copy
       gulp.watch([
         path.join(__dirname, dirs.source, '**/*'),
-        path.join('!', __dirname, dirs.source, '{**/\_*,**/\_*/**}'),
-        path.join('!', __dirname, dirs.source, '**/*.jade')
+        '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}'),
+        '!' + path.join(__dirname, dirs.source, '**/*.jade')
       ], ['copy']);
 
       // Scripts
