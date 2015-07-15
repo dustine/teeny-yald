@@ -278,3 +278,74 @@ gulp.task('test', (done) => {
     autoWatch: watch
   }, done);
 });
+
+
+gulp.task('deploy', ['default --production'], function (cb) {
+  // return gulp.src('dist')
+  //   .pipe($.subtree())
+  //   // .on('end', function () {
+  //   //   del(['.tmp', 'dist'])
+  //   // })
+
+  var gutil = require('gulp-util')
+  // FIXME: Code adapted from gulp-subtree, as for some reason it fails on my system :\
+  ;(function subtree (folder, callback) {
+    var exec = require('child_process').exec
+
+    var remote = 'origin'
+    var branch = 'gh-pages'
+    var message = 'Distribution Commit'
+
+    // execute('git add ' + folder, function () {
+    exec('git add -A ' + folder + ' && git commit -m "' + message + '"', function (error) {
+      if (error) {
+        return callback(error)
+      }
+      // gutil.log('Temporarily committing ' + chalk.magenta(folder))
+      gutil.log('Temporarily committing ' + gutil.colors.magenta(folder))
+      exec('git ls-remote ' + remote + ' ' + branch, function (error, rmt) {
+        if (error) {
+          return callback(error)
+        }
+        if (rmt.length > 0) {
+          gutil.log('Cleaning ' + gutil.colors.cyan(remote) + '/' + gutil.colors.cyan(branch))
+          exec('git push ' + remote + ' :' + branch, function (error) {
+            if (error) {
+              return callback(error)
+            }
+            deployFinish()
+          })
+        } else {
+          deployFinish()
+        }
+      })
+    })
+
+    // ////////////////////////////
+    // Finish Deploy
+    // ////////////////////////////
+    var deployFinish = function () {
+      gutil.log('Pushing ' + gutil.colors.magenta(folder) + ' to ' + gutil.colors.cyan(remote) + '/' + gutil.colors.cyan(branch))
+      exec('git subtree push --prefix ' + folder + ' ' + remote + ' ' + branch, function (error) {
+        if (error) {
+          return callback(error)
+        }
+        gutil.log('Resetting ' + gutil.colors.magenta(folder) + ' temporary commit')
+        // HACK: The only line changed from the original ("HEAD^" doesn't work on windows it seems)
+        exec('git reset HEAD~1', function (error) {
+          return callback(error)
+        })
+      })
+    }
+  })('dist', function (error) {
+    if (error) {
+      return cb(error)
+    }
+    // ////////////////////////////
+    // Delete files
+    // ////////////////////////////
+    gutil.log('Deleting build files')
+    gulp.start('clean')
+    cb()
+  })
+})
