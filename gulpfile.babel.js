@@ -280,7 +280,7 @@ gulp.task('test', (done) => {
 });
 
 
-gulp.task('deploy', ['default --production'], function (cb) {
+gulp.task('deploy', ['default'], function (cb) {
   // return gulp.src('dist')
   //   .pipe($.subtree())
   //   // .on('end', function () {
