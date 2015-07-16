@@ -1,8 +1,9 @@
+/* global Crafty */
 'use strict'
 
 import $ from 'jquery'
 
-// FIXME: Don't keep debug on!
+// FIXED: Don't keep debug on!
 var DEBUG = false
 
 // HACK: Homemade time formattation, oh my
@@ -176,9 +177,10 @@ $(() => {
   var game = $('#animated-sansa')
   var WIDTH = game.width()
   var HEIGHT = game.height()
-  var BORDER = 20
-  var SPAWN_BORDER = 100
-  var GAME_LENGTH = 60 * 1000
+  var BORDER = 50
+  var SPAWN_BORDER = 50
+  // in seconds thanks to Crafty.timer.FPS()
+  var GAME_LENGTH = 60
 
   // player constants
   var MAX_SPEED = 8
@@ -215,19 +217,27 @@ $(() => {
     // forces to redraw the pause screen
     Crafty.trigger('RenderScene')
   })
+
   Crafty.bind('Unpause', function () {
     Crafty('PauseScreen').each(function () {
       this.destroy()
     })
   })
+
   Crafty.bind('NewScore', function (score) {
     updateScoreCounters(score)
   })
-  Crafty.bind('Hit', function (score) {
+
+  function newRun () {
     runs.push({
-      score: score,
-      time: clock._dt
+      score: player.score,
+      // +1 as the clock is always one frame behind
+      time: Math.round((clock._dt + 1) * 1000 / Crafty.timer.FPS())
     })
+  }
+
+  Crafty.bind('Hit', function (score) {
+    newRun()
     updateTimebarHits(clock._dt, clock._gameEnd)
   })
 
@@ -274,15 +284,17 @@ $(() => {
         return
       }
       updateTimebarProgress(this._dt, this._gameEnd)
-      this._dt += frame.dt
+      // this._dt += frame.dt
+      // update the game frame-wise
+      this._dt++
     },
     _winGame: function () {
       Crafty.scene('GameWon')
     },
     gameClock: function (gameEnd) {
-      this._gameEnd = gameEnd
+      this._gameEnd = gameEnd * Crafty.timer.FPS()
       this.bind('EnterFrame', this._enterFrame)
-      this.delay(this._winGame, gameEnd)
+      this.delay(this._winGame, gameEnd * 1000)
       return this
     },
     reset: function () {
@@ -325,20 +337,6 @@ $(() => {
   //
   // $(document).on('pointerlockchange', lockChange)
   // $(document).on('pointerlockerror', lockError)
-
-  // FIXME: This should be in player.js
-  // ## Recording location
-  function recordFirstFrame (frame) {
-    this._firstFrame = frame.frame
-  }
-
-  function record (frame) {
-    this._previousFrames[frame.frame] = {
-      // dt: frame.dt,
-      x: this.x,
-      y: this.y
-    }
-  }
 
   // ## update outside GUI
   // TODO(Dustine): Scenes
@@ -395,7 +393,7 @@ $(() => {
   }, function () {
     spawner = Crafty.e('Spawner')
       // TODO: Make this a global constant
-      .spawner(GAME_LENGTH / Crafty.timer.FPS())
+      .spawner(GAME_LENGTH)
   })
 
   Crafty.scene('Loop', function () {
@@ -404,9 +402,6 @@ $(() => {
         this.addComponent('WiredHitBox')
       })
     }
-    // start player's recording
-    player.one('ExitFrame', recordFirstFrame)
-    player.bind('ExitFrame', record)
     // start the game clock
     clock = Crafty.e('GameClock')
       .gameClock(GAME_LENGTH)
@@ -423,8 +418,6 @@ $(() => {
     // clock.reset()
     // stop the spawner
     spawner.reset()
-    // stop recording
-    player.unbind('ExitFrame', record)
     // save current run's values
     var firstFrame = player._firstFrame || 0
     var previousFrames = player._previousFrames || []
@@ -523,6 +516,8 @@ $(() => {
   })
 
   Crafty.scene('GameWon', function () {
+    // save final run (no hits!)
+    newRun()
     // cleanup
     Crafty('Quark').each(function () {
       this.destroy()
@@ -572,7 +567,7 @@ $(() => {
       .attr({w: WIDTH, y: 300})
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Mouse, Keyboard, Text')
-      .attr({x: (WIDTH - 400) / 2, y: (HEIGHT - 100) / 2 + 100, w: 400, h: 100})
+      .attr({x: (WIDTH - 400) / 2, y: (HEIGHT - 100) / 2 + 200, w: 400, h: 100})
       // TODO: Move this to the CSS (hint: Components == Classes)
       .css({
         'background': 'linear-gradient(to bottom, skyBlue 0%, cyan 100%)',

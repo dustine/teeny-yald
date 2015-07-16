@@ -18,10 +18,17 @@
   text-align: center;
 }
 
+$background: #fff8e2;
+$text: #000;
+
 .version {
+  $padding: .3em;
+  background: $background;
+  border-radius: $padding;
   bottom: 10px;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   font-size: 14px;
+  padding: $padding;
   position: absolute;
   right: 10px;
 }
@@ -32,9 +39,9 @@
 
 // Styling on warning for users on IE7 or below
 .browsehappy {
-  text-align: center;
+  background: $background;
+  color: $text;
   margin: 0;
-  background: #fff8e2;
-  color: #000;
-  padding: 0.5em 0;
+  padding: .5em 0;
+  text-align: center;
 }

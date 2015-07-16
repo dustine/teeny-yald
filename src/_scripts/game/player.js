@@ -2,8 +2,8 @@ function scale (val, from, to) {
   return (val - from[0]) / (from[1] - from[0]) * (to[1] - to[0]) + to[0]
 }
 
-var MAX_DISTANCE = 100
-var MAX_SCORE = 50
+var MAX_DISTANCE = 200
+var MAX_SCORE = 1000
 
 module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
   Crafty.c('PointerWay', {
@@ -113,10 +113,12 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
       })
 
       this.bind('StartLoop', function () {
+        this.one('ExitFrame', this._recordFirstFrame)
+        this.bind('ExitFrame', this._record)
         this.bind('ExitFrame', this._score)
       })
       this.bind('EndLoop', function () {
-        this.unbind('ExitFrame', this._score)
+        this.unbind('ExitFrame')
       })
     },
     _collision: function () {
@@ -159,6 +161,17 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
         this.score += score
         Crafty.trigger('NewScore', this.score)
       // Crafty.trigger('NewScore', score)
+      }
+    },
+    // ## Recording location
+    _recordFirstFrame: function (frame) {
+      this._firstFrame = frame.frame
+    },
+     _record: function (frame) {
+      this._previousFrames[frame.frame] = {
+        // dt: frame.dt,
+        x: this.x,
+        y: this.y
       }
     },
     enableKeyboard: function () {

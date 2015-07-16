@@ -1,7 +1,7 @@
-/* eslint-env node */
-
 function scale (val, from, to) {
-  return (val - from[0]) / (from[1] - from[0]) * (to[1] - to[0]) + to[0]
+  // return (val - from[0]) / (from[1] - from[0]) * (to[1] - to[0]) + to[0]
+
+  return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
 }
 
 function angleBetween (origin, dest) {
@@ -33,6 +33,10 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
     init: function () {
       this._spawnFrame = 0
       this._frames = []
+      this.count = {
+        'whiteTachyon': 0,
+        'cyanTachyon': 0
+      }
     // this.requires('2D, Persist')
     },
     _enterFrame: function () {
@@ -57,7 +61,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           spawns.push({
             type: 'White',
             id: id,
-            speed: 4
+            speed: scale(Math.random(), [0, 1], [3, 5])
           })
         }
         return spawns
@@ -65,9 +69,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
       function pickSide (elem) {
         function topSide (elem) {
           // origin
-          elem.x = Math.random() * (WIDTH + spawnRegion * 2) -
-            spawnRegion
-          elem.y = -spawnRegion
+          elem.x = Math.random() * (WIDTH - BORDER) + BORDER / 2
+          elem.y = BORDER / 2
           // destination
           pos = [elem.x, elem.y]
           if (elem.x <= BORDER) {
@@ -90,9 +93,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
 
         function rightSide (elem) {
           // origin
-          elem.x = WIDTH + spawnRegion
-          elem.y = Math.random() * (HEIGHT + spawnRegion * 2) -
-            spawnRegion
+          elem.x = WIDTH - BORDER / 2
+          elem.y = Math.random() * (HEIGHT - BORDER) + BORDER / 2
           // destination
           pos = [elem.x, elem.y]
           if (elem.y <= BORDER) {
@@ -116,9 +118,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
 
         function bottomSide (elem) {
           // origin
-          elem.x = Math.random() * (WIDTH + spawnRegion * 2) -
-            spawnRegion
-          elem.y = HEIGHT + spawnRegion
+          elem.x = Math.random() * (WIDTH - BORDER) + BORDER / 2
+          elem.y = HEIGHT - BORDER / 2
           // destination
           pos = [elem.x, elem.y]
           if (elem.x <= BORDER) {
@@ -141,9 +142,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
 
         function leftSide (elem) {
           // origin
-          elem.x = -spawnRegion
-          elem.y = Math.random() * (HEIGHT + spawnRegion * 2) -
-            spawnRegion
+          elem.x = BORDER / 2
+          elem.y = Math.random() * (HEIGHT - BORDER) + BORDER / 2
           // destination
           pos = [elem.x, elem.y]
           if (elem.y <= BORDER) {
@@ -164,7 +164,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
         //   [BORDER, HEIGHT - BORDER])
         }
 
-        var spawnRegion = SPAWN_BORDER * 3 / 4
+        // var spawnRegion = SPAWN_BORDER * 3 / 4
         var minAngle
         var maxAngle
         var pos
@@ -207,9 +207,10 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
         return []
       }
       // reset spawner counter
-      var maxTimeLimit = scale(this._dt / this._gameEnd, [0, 1], [100, 4])
-      this._spawnFrame = this._dt + scale(Math.random(), [0, 1], [4, maxTimeLimit])
-      console.log('next spawn', this._spawnFrame - this._dt, 'dt', this._dt, 'of', this._dt / this._gameEnd)
+      var maxTimeLimit = scale(this._dt / this._gameEnd, [0, 1], [100, 20])
+      this._spawnFrame = this._dt + scale(Math.random(), [0, 1], [maxTimeLimit - 10, maxTimeLimit])
+      // console.log('next spawn', this._spawnFrame - this._dt, 'dt', this._dt, 'of', this._dt / this._gameEnd)
+      // console.log('maxTimeLimit', maxTimeLimit, 'of', this._dt / this._gameEnd)
       var spawns = pickTypes(this)
       spawns.forEach(pickSide)
       return spawns
@@ -227,10 +228,12 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
             Crafty.e('CyanTachyon')
               .cyanTachyon(elem.x, elem.y, elem.w, elem.angle, elem.speed)
         }
+
       })
+      // console.log('whiteTachyons', Crafty('WhiteTachyon').length)
     },
     spawner: function (gameEnd) {
-      this._gameEnd = gameEnd
+      this._gameEnd = gameEnd * Crafty.timer.FPS()
       return this
     },
     reset: function () {

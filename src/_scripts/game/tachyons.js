@@ -3,9 +3,12 @@
 module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
   Crafty.c('Tachyon', {
     init: function () {
-      this.requires('2D, DOM, Color')
-      this.attr({w: SIZE, h: SIZE})
+      this.requires('2D, DOM, Color, Tween')
+      this.attr({w: SIZE, h: SIZE, alpha: 0})
       this.z = 300
+      // TODO: Make it a variable
+      var _this = this
+      this.tween({alpha: 1}, 2000)
     }
   })
 
@@ -55,7 +58,9 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
       this._movement.y = -Math.sin(angle) * speed
       this.origin('center')
       this.rotation = (Math.PI - angle) * (180 / Math.PI)
-      this.bind('EnterFrame', this._enterFrame)
+      this.one('TweenEnd', function () {
+        this.bind('EnterFrame', this._enterFrame)
+      })
       return this
     }
   })

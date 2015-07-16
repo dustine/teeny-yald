@@ -35,6 +35,7 @@
     "gulp-postcss": "~5.1.8",
     "gulp-sass": "~2.0.1",
     "gulp-sourcemaps": "~1.5.2",
+    "gulp-subtree": "^0.1.0",
     "gulp-uglify": "~1.2.0",
     "gulp-util": "~3.0.5",
     "imagemin-pngquant": "^4.1.2",
@@ -62,7 +63,7 @@
     "//": "NOTE: folders NOT prefixed with underscore (_) will be copied to build target 1 to 1 (ex: src/fonts -> build/fonts)",
     "host": "127.0.0.1",
     "port": "9010",
-    "baseUrl": "/",
+    "baseUrl": "/teeny-yald/",
     "directories": {
       "source": "src",
       "destination": "build",
