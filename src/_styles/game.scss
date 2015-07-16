@@ -1,0 +1,26 @@
+$bg: #012;
+$bg-lighter1: #024;
+$bg-lighter2: #036;
+$text: #eee;
+$bottom-gradient: linear-gradient(to bottom, $bg 0%, $bg-lighter1 60%, $bg-lighter2 100%);
+
+body {
+  background: $bg;
+}
+
+.title-header {
+  color: $text;
+  text-align: center;
+}
+
+.bottom-gradient {
+  background: $bottom-gradient;
+  bottom: 0%;
+  height: 10%;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: -1000;
+}
+
+@import 'game-container';

@@ -1,0 +1,47 @@
+// Normalize Styles
+@import 'node_modules/normalize.css/normalize';
+@import 'icomoon';
+@import 'helper';
+
+// Box sizing partial styles:
+// Apply a natural box layout model to all elements
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+.yeogurt-info {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 500px;
+  text-align: center;
+}
+
+$background: #fff8e2;
+$text: #000;
+
+.version {
+  $padding: .3em;
+  background: $background;
+  border-radius: $padding;
+  bottom: 10px;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 14px;
+  padding: $padding;
+  position: absolute;
+  right: 10px;
+}
+
+.logo {
+  margin-top: 15px;
+}
+
+// Styling on warning for users on IE7 or below
+.browsehappy {
+  background: $background;
+  color: $text;
+  margin: 0;
+  padding: .5em 0;
+  text-align: center;
+}

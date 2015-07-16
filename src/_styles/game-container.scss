@@ -1,0 +1,191 @@
+
+@import 'helper';
+
+$game-background: #000;
+$blue-glow: #08f;
+// $loop-counter-separator:;
+
+$metal-0: rgba(245, 246, 246, 1);
+$metal-1: rgba(219, 220, 226, 1);
+$metal-2: rgba(184, 186, 198, 1);
+$metal-3: rgba(221, 223, 227, 1);
+$metal: linear-gradient(to bottom, $metal-0 0%, $metal-1 21%, $metal-2 49%, $metal-3 80%, $metal-0 100%);
+
+// game styles
+.game-container {
+  // TODO: Uncomment this to prevent (most) selection events
+
+  background: $metal-0;
+  border-radius: .5rem;
+  box-shadow: 0 0 1.2em .4em $blue-glow;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+  left: 50%;
+  margin-right: -50%;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  > .score-display {
+    border-radius: .5em .5em 0 0;
+  }
+
+  > .view-frame {
+    background: $game-background;
+    border-radius: .5em;
+    // width: 800px;
+    // height: 450px;
+    height: 600px;
+    margin: 0 .3em;
+    pointer-events: auto;
+    width: 1000px;
+  }
+
+  > .progress-display {
+    border-radius: 0 0 .5em .5em;
+  }
+}
+
+.score-display,
+.progress-display {
+  background: $metal;
+}
+
+.progress-display {
+  border-radius: 0 0 .5rem .5em;
+  display: table;
+  vertical-align: top;
+  width: 100%;
+
+  > .loop-counter {
+    border-right: solid thick $metal-2;
+    width: 6.8em;
+  }
+
+  > .timeline-bar {
+    display: table-cell;
+    padding: 0 .5em;
+    vertical-align: middle;
+  }
+
+  > .progress-counter {
+    width: 7.7em;
+  }
+
+  > .segmented-counter {
+    display: table-cell;
+    vertical-align: middle;
+  }
+}
+
+.progress-display > .segmented-counter,
+.progress-display > .timeline-bar {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.segmented-counter {
+  @extend %clearfix;
+  padding: .2em .3em .2em .2em;
+
+  > .head {
+    float: left;
+    margin: 0 .35em;
+    text-align: center;
+  }
+
+  > .-icon {
+    padding-top: .1em;
+  }
+
+  > .tail {
+    float: right;
+    margin: 0 .35em;
+    text-align: center;
+  }
+}
+
+%left {
+  border-bottom-left-radius: .3em;
+  border-left-style: solid;
+  border-top-left-radius: .3em;
+}
+
+%right {
+  border-bottom-right-radius: .3em;
+  border-top-right-radius: .3em;
+}
+
+.counter {
+  display: table;
+  float: left;
+
+  $digit-0: #000;
+  $digit-1: rgba(128, 128, 128, 1);
+  $digit-2: rgba(169, 169, 169, 1);
+  $digit: linear-gradient(to bottom, $digit-0 0%, $digit-1 40%, $digit-2 60%, $digit-0 100%);
+  $digit-text: #fff;
+  $digit-border: #222;
+
+  > .digit {
+    background: $digit;
+    border: solid thin $digit-border;
+    color: $digit-text;
+    display: table-cell;
+    font-weight: bold;
+    text-align: center;
+    width: 1em;
+
+    + .digit {
+      border-left-style: none;
+    }
+
+    &:first-of-type {
+      @extend %left;
+    }
+
+    &:last-of-type {
+      @extend %right;
+    }
+  }
+
+  &.-separate {
+    > .digit.-left {
+      @extend %left;
+    }
+
+    > .digit.-right {
+      @extend %right;
+    }
+
+    .separator {
+      margin: 0 .1em;
+    }
+  }
+}
+
+.timeline-bar > .timeline {
+  position: relative;
+}
+
+.timeline > canvas {
+  display: block;
+  margin: 0 auto;
+  position: absolute;
+}
+
+.timeline > .display {
+  box-shadow: inset 0 0 1em .4em rgba(0, 0, 0, .5);
+  z-index: 15;
+}
+
+.timeline > .hits {
+  z-index: 10;
+}
+
+$progress: #eee;
+
+.timeline > .progress {
+  background: $progress;
+  z-index: 5;
+}
