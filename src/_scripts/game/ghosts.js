@@ -33,9 +33,9 @@ module.exports = function (Crafty) {
       this.tween({alpha: 0}, 200)
     },
     Ghost: function (tachId, firstFrame, previousFrames) {
+      this._tachId = tachId
       this._firstFrame = firstFrame
       this._previousFrames = previousFrames
-      this._tachId = tachId
       this._init()
     },
     reset: function () {
@@ -56,16 +56,17 @@ module.exports = function (Crafty) {
       this.color('red')
       // this.color('rgb(209, 210, 167)')
       this.bind('EnterFrame', this._enterFrame)
-      // this.one('EndPlayback', this._endRecording)
       this.z = 500
     },
     remove: function () {
-      // NOTE: onHit adds the Tachyon thing to EnterFrame
+      // onHit adds the Tachyon thing to EnterFrame
       this.unbind('EnterFrame', this._enterFrame)
       this.ignoreHits('Tachyon')
     },
     _enterFrame: function () {
-      var data = this.hit('Tachyon')
+      // HACK: Checking for collision twice, doesn't make much sense why....
+      // check for hits before moving
+      let data = this.hit('Tachyon')
       if (data) {
         this._removeStray(data, 'prev')
       }
@@ -73,21 +74,24 @@ module.exports = function (Crafty) {
         this.trigger('PlaybackEnd')
         return
       }
-      var pos = this._previousFrames[this._f++]
+      let pos = this._previousFrames[this._f++]
       this.x = pos.x
       this.y = pos.y
+      // check for hits after moving
       data = this.hit('Tachyon')
       if (data) {
         this._removeStray(data, 'post')
       }
     },
     _removeStray: function (data, text) {
-      var _this = this
-      console.log(data)
+      let _this = this
       data.forEach(function (elem) {
-        // TODO: Check for paradoxes
-        console.log(text, elem.obj.id, _this._tachId)
-        elem.obj.destroy()
+        // TODO: Check for paradoxes better than a console log
+        if (elem.obj.id === _this._tachId) {
+          elem.obj.destroy()
+        } else {
+          console.log('Paradox! Should be', _this._tachId, 'instead of', elem.obj.id)
+        }
       })
     }
   })

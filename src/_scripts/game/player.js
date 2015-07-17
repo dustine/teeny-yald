@@ -1,14 +1,41 @@
 function scale (val, from, to) {
-  return (val - from[0]) / (from[1] - from[0]) * (to[1] - to[0]) + to[0]
+  return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
 }
 
-var MAX_DISTANCE = 200
-var MAX_SCORE = 1000
-
 module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
+  const MAX_DISTANCE = 100
+  const MAX_SCORE = 1000000 / Crafty.timer.FPS()
+
+  let normalColor = {
+    // #077CBE
+    r: 7,
+    g: 124,
+    b: 190
+  }
+
+  let energizedColor = {
+    // rgb(158, 217, 49)
+    r: 158,
+    g: 217,
+    b: 49
+  }
+
+  function setColor (color) {
+    this.color(`rgb(${color.r}, ${color.g}, ${color.b})`)
+  }
+
+  function blendColours (step, colorFrom, colorTo) {
+    let result = {
+      r: Math.round(scale(step, [0, 1], [colorFrom.r, colorTo.r])),
+      g: Math.round(scale(step, [0, 1], [colorFrom.g, colorTo.g])),
+      b: Math.round(scale(step, [0, 1], [colorFrom.b, colorTo.b]))
+    }
+    this.color(`rgb(${result.r}, ${result.g}, ${result.b})`)
+  }
+
   Crafty.c('PointerWay', {
     init: function () {
-      var _this = this
+      let _this = this
       this._mouseMovement = {
         x: 0,
         y: 0
@@ -32,14 +59,14 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
         this._mouseMoveAtPointerLock)
     },
     _enterFrame: function () {
-      var oldPos = {
+      let oldPos = {
         x: this._x,
         y: this._y
       }
-      var movX = this._mouseMovement.x
-      var movY = this._mouseMovement.y
+      let movX = this._mouseMovement.x
+      let movY = this._mouseMovement.y
       this._mouseMovement.x = this._mouseMovement.y = 0
-      var movAbs = Math.hypot(movX, movY)
+      let movAbs = Math.hypot(movX, movY)
       // HACK: this._speed isn't coeherent with the movement (sin/cos vs absolute)
       if (movAbs > this._speed.x) {
         movX = this._speed.x * (movX / movAbs)
@@ -83,22 +110,23 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
       this.requires('Quark, Fourway, Persist')
       this._previousFrames = []
       this.z = 1000
-      this.color('rgb(7, 124, 190)')
+      setColor.call(this, normalColor)
       // FIXME: Fourway makes diagonals OP
       this.fourway(MAX_SPEED * 3 / 4)
-      this.onHit('Active', function () {
-        Crafty.trigger('Hit', this.score)
-        Crafty.scene('GameOver')
-      })
-      this.onHit('Tachyon', function (hitInfo) {
-        Crafty.trigger('Hit', this.score)
-        this.score = 0
-        Crafty.trigger('NewScore', this.score)
-        this._tachId = hitInfo[0].obj.id
-        hitInfo.forEach(function (elem) {
-          elem.obj.destroy()
-        })
-        Crafty.scene('Scratch')
+      var die = function () {
+        let info = this._info()
+        // no reset, we ded
+        Crafty.trigger('PlayerKill', info)
+      }
+      this.onHit('Active', die)
+      // NOTE: WhiteTachyons reset, others.... gameover?
+      this.onHit('Deadly', die)
+      this.onHit('Energized', function (hitInfo) {
+        let info = this._info(hitInfo)
+        // HACK: Just to avoid some extra hits on the newly created Ghost
+        hitInfo[0].obj.destroy()
+        this._reset()
+        Crafty.trigger('PlayerScratch', info)
       })
       this.score = 0
       Crafty.trigger('NewScore', this.score)
@@ -112,6 +140,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
         }
       })
 
+      // game loop logic
       this.bind('StartLoop', function () {
         this.one('ExitFrame', this._recordFirstFrame)
         this.bind('ExitFrame', this._record)
@@ -134,12 +163,21 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
         this.y = HEIGHT - this.h - BORDER
       }
     },
+    _info: function (hitInfo) {
+      return {
+        score: this.score,
+        // only account the first, as that'll be the one that killed us
+        tachId: hitInfo && hitInfo[0].obj.id,
+        firstFrame: this._firstFrame,
+        previousFrames: this._previousFrames
+      }
+    },
     _score: function () {
       // get min distance
-      var min = []
-      var _this = this
-      Crafty('WhiteTachyon').each(function () {
-        // TODO: Consider centers, not origin (offside to the top left)
+      let min = []
+      let _this = this
+      Crafty('Energized').each(function () {
+        // TODO: Consider centers, not origin (offside to the top left) (done?)
         min.push(Math.hypot(
             _this.x + _this.w / 2 - this.x - this.w / 2,
             _this.y + _this.h / 2 - this.y - this.h / 2
@@ -154,13 +192,16 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
       min = min < 0 ? 0 : min
       // turn it into a cumulative score
       // TODO: make it cummulative
-      var score = MAX_DISTANCE - min
+      let score = MAX_DISTANCE - min
       score *= score
-      score = scale(score, [0, MAX_DISTANCE * MAX_DISTANCE], [0, MAX_SCORE])
+      score = scale(score, [0, Math.pow(MAX_DISTANCE, 2)], [0, MAX_SCORE])
       if (score !== 0) {
+        blendColours.call(this, score / MAX_SCORE, normalColor, energizedColor)
         this.score += score
         Crafty.trigger('NewScore', this.score)
       // Crafty.trigger('NewScore', score)
+      } else {
+        setColor.call(this, normalColor)
       }
     },
     // ## Recording location
@@ -174,13 +215,21 @@ module.exports = function (Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER) {
         y: this.y
       }
     },
+    _reset: function () {
+      this._firstFrame = 0
+      this._previousFrames = []
+      // FIXME: Make this an attribute so you can trigger NewScore automatically
+      this.score = 0
+      Crafty.trigger('NewScore', this.score)
+      setColor.call(this, normalColor)
+    },
     enableKeyboard: function () {
       this.removeComponent('PointerWay')
       this.enableControl()
     },
     enableMouse: function () {
       // only disables Fourway
-      var _this = this
+      let _this = this
       this.disableControl()
       setTimeout(function () {
         _this.addComponent('PointerWay')

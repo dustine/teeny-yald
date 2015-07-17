@@ -4,7 +4,7 @@
 import $ from 'jquery'
 
 // FIXED: Don't keep debug on!
-var DEBUG = false
+const DEBUG = false
 
 // HACK: Homemade time formattation, oh my
 function formatTime (ms) {
@@ -13,7 +13,7 @@ function formatTime (ms) {
     return Math.floor(number)
   }
   // milliseconds
-  var result = ' s'
+  let result = ' s'
   result = (ms % 1000).toFixed(0) + result
   while (result.length < 5) {
     result = '0' + result
@@ -35,78 +35,20 @@ function formatTime (ms) {
 }
 
 $(() => {
-  var $container = $('.timeline')
-  var display = $('.timeline > .display')[0]
-  var hits = $('.timeline > .hits')[0]
-  var progress = $('.timeline > .progress')[0]
 
-  // TODO: make this a module
-  ;(function loadFrame ($container, display, hits, progress) {
-    (function addCorrectBorderRadiusToDigits () {
-      function addIntegerBorderRadius (length, i, elem) {
-        i = length - i - 1
-        if (i % 3 === 0) {
-          $(elem).addClass('-right')
-        }
-        if ((i + 1) % 3 === 0) {
-          $(elem).addClass('-left')
-        }
-      }
+  require('./game/outsideFrame')
 
-      $('.counter.-separate').each(function (i, elem) {
-        var $children = $(elem).children()
-        var $digits = $children.filter('.digit')
-        $digits.each(function (i, elem) {
-          addIntegerBorderRadius($digits.length, i, elem)
-        })
-      })
-    }())
-
-    // initialize canvas
-    console.log($container.parent(), $container.parent().height())
-
-    var CANVAS_WIDTH = $container.width()
-    var CANVAS_HEIGHT = $container.parent().height() * 0.8
-    $container.height(CANVAS_HEIGHT)
-
-    display.width = hits.width = progress.width = CANVAS_WIDTH
-    display.height = hits.height = progress.height = CANVAS_HEIGHT
-    var context = display.getContext('2d')
-
-    context.lineWidth = 1
-    context.lineCap = 'round'
-    context.strokeStyle = '#666'
-    var maxDivider = 32
-    for (var divider = 2; divider <= maxDivider; divider *= 2) {
-      for (var place = 1; place < divider; place++) {
-        context.beginPath()
-        context.moveTo(
-          Math.round(CANVAS_WIDTH / divider * place) + 0.5,
-          CANVAS_HEIGHT
-        )
-        var pointerLimit = Math.log(divider) /
-          Math.log(maxDivider * maxDivider)
-        context.lineTo(
-          Math.round(CANVAS_WIDTH / divider * place) + 0.5,
-          Math.round(CANVAS_HEIGHT * pointerLimit +
-            CANVAS_HEIGHT * 1 / 4)
-        )
-        context.stroke()
-      }
-    }
-  })($container, display, hits, progress)
-
-  // var $container = $('.timeline')
-  // var display = $('#tb-display')[0]
-  // var hits = $('#tb-hits')[0]
-  // var progress = $('#tb-progress')[0]
+  // let $container = $('.timeline')
+  // let display = $('.timeline > .display')[0]
+  let hits = $('.timeline > .hits')[0]
+  let progress = $('.timeline > .progress')[0]
 
   function updateTimebarHits (current, total, color) {
     color = color || 'red'
-    var context = hits.getContext('2d')
-    var x = Math.floor(hits.width * (current / total)) - 0.5
+    let context = hits.getContext('2d')
+    let x = Math.floor(hits.width * (current / total)) - 0.5
     context.beginPath()
-    var gradient = context.createLinearGradient(0, 0, 0, progress.height)
+    let gradient = context.createLinearGradient(0, 0, 0, progress.height)
     gradient.addColorStop(0, 'rgb(121, 0, 0)')
     gradient.addColorStop(0.5, color)
     gradient.addColorStop(1, 'rgb(121, 0, 0)')
@@ -120,26 +62,26 @@ $(() => {
   function updateTimebarProgress (current, total, color) {
     // update bar
     color = color || 'cyan'
-    var context = progress.getContext('2d')
+    let context = progress.getContext('2d')
     context.clearRect(0, 0, progress.width, progress.height)
-    var gradient = context.createLinearGradient(0, 0, 0, progress.height)
+    let gradient = context.createLinearGradient(0, 0, 0, progress.height)
     gradient.addColorStop(0, color)
     gradient.addColorStop(1, 'rgb(0, 199, 205)')
     // gradient.addColorStop(1, 'rgb(0, 159, 181)')
     context.fillStyle = gradient
-    var length = Math.min(progress.width * (current / total), progress.width)
+    let length = Math.min(progress.width * (current / total), progress.width)
     context.fillRect(0, 0, length, progress.height)
   }
 
   function resetTimebar () {
-    var context = progress.getContext('2d')
+    let context = progress.getContext('2d')
     context.clearRect(0, 0, progress.width, progress.height)
     context = hits.getContext('2d')
     context.clearRect(0, 0, hits.width, hits.height)
   }
 
   function updateLoopCounters (attempts) {
-    var digits = $('.loop-counter .digit')
+    let digits = $('.loop-counter .digit')
       .toArray()
     attempts = attempts.toString()
     for (; attempts.length < 4;) {
@@ -148,13 +90,13 @@ $(() => {
     if (attempts.length > 4) {
       attempts = '10k+'
     }
-    for (var l = 0; l < 4; ++l) {
+    for (let l = 0; l < 4; ++l) {
       digits[l].innerHTML = attempts[l]
     }
   }
 
   function updateScoreCounters (score) {
-    var digits = $('.score-display .digit')
+    let digits = $('.score-display .digit')
       .toArray()
     score = score.toFixed(0).toString()
     for (; score.length < digits.length;) {
@@ -163,7 +105,7 @@ $(() => {
     if (score.length > digits.length) {
       throw 'score too bong, ' + score
     }
-    for (var l = 0; l < digits.length; ++l) {
+    for (let l = 0; l < digits.length; ++l) {
       digits[l].innerHTML = score[l]
     }
   }
@@ -174,23 +116,23 @@ $(() => {
 
   // # CONSTANTS
   // global consts
-  var game = $('#animated-sansa')
-  var WIDTH = game.width()
-  var HEIGHT = game.height()
-  var BORDER = 50
-  var SPAWN_BORDER = 50
+  let game = $('#animated-sansa')
+  const WIDTH = game.width()
+  const HEIGHT = game.height()
+  const BORDER = 50
+  const SPAWN_BORDER = 50
   // in seconds thanks to Crafty.timer.FPS()
-  var GAME_LENGTH = 60
+  const GAME_LENGTH = 60
 
   // player constants
-  var MAX_SPEED = 8
-  var PLAYER_RADIUS = 5
+  const MAX_SPEED = 8
+  const PLAYER_RADIUS = 5
 
   // tachyons constants
-  var TACHYON_SIZE = 4
+  const TACHYON_SIZE = 4
 
   // statistics
-  var runs = []
+  let runs = []
 
   function inGameState () {
     return !Crafty.isPaused() &&
@@ -205,6 +147,7 @@ $(() => {
     if (!inGameState()) {
       return
     }
+    // pause menu layout
     Crafty.e('2D, DOM, Text, PauseScreen')
       .attr({w: WIDTH, y: 40, z: 2100})
       .css('text-align', 'center')
@@ -228,27 +171,35 @@ $(() => {
     updateScoreCounters(score)
   })
 
-  function newRun () {
+  function newRun (info) {
+    let score = (info && info.score) || player.score
     runs.push({
-      score: player.score,
-      // +1 as the clock is always one frame behind
-      time: Math.round((clock._dt + 1) * 1000 / Crafty.timer.FPS())
+      score: score,
+      // run times are saved in ms
+      time: Math.round(clock.time() * 1000)
     })
   }
 
-  Crafty.bind('Hit', function (score) {
-    newRun()
-    updateTimebarHits(clock._dt, clock._gameEnd)
+  Crafty.bind('PlayerScratch', function (info) {
+    newRun(info)
+    updateTimebarHits(clock.time(), GAME_LENGTH)
+    Crafty.trigger('EndLoop')
+    // ready the new ghost
+    if (info.previousFrames !== []) {
+      Crafty.e('Ghost')
+        .Ghost(info.tachId, info.firstFrame, info.previousFrames)
+    }
+
+    Crafty.scene('Scratch')
+  })
+
+  Crafty.bind('PlayerKill', function (info) {
+    newRun(info)
+    updateTimebarHits(clock.time(), GAME_LENGTH)
+    Crafty.scene('GameOver')
   })
 
   // # CUSTOM COMPONENTS
-  require('./game/player')(Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER)
-  require('./game/ghosts')(Crafty)
-  require('./game/tachyons')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
-    TACHYON_SIZE)
-  require('./game/spawner')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
-    TACHYON_SIZE)
-
   Crafty.c('Quark', {
     init: function () {
       this.requires('2D, DOM, Color, Collision')
@@ -268,42 +219,59 @@ $(() => {
     }
   })
 
+  require('./game/player')(Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER)
+  require('./game/ghosts')(Crafty)
+  require('./game/tachyons')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
+    TACHYON_SIZE)
+  require('./game/spawner')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
+    TACHYON_SIZE)
+
   Crafty.c('GameClock', {
-    _dt: 0,
-    _gameEnd: 0,
-    _dead: false,
+    _f: 0,
+    _lastFrame: 0,
+    // _dead: false,
     init: function () {
       this.requires('2D, Delay')
     },
-    destroy: function () {
-      this._dead = true
+    remove: function () {
+      // this._dead = true
       this.cancelDelay(this._winGame)
     },
     _enterFrame: function (frame) {
-      if (this._dead) {
-        return
-      }
-      updateTimebarProgress(this._dt, this._gameEnd)
+      // if (this._dead) {
+      //   return
+      // }
+      updateTimebarProgress(this._f, this._lastFrame)
       // this._dt += frame.dt
       // update the game frame-wise
-      this._dt++
+      this._f++
     },
     _winGame: function () {
       Crafty.scene('GameWon')
     },
-    gameClock: function (gameEnd) {
-      this._gameEnd = gameEnd * Crafty.timer.FPS()
+    gameClock: function (gameDuration) {
+      this._lastFrame = gameDuration * Crafty.timer.FPS()
       this.bind('EnterFrame', this._enterFrame)
-      this.delay(this._winGame, gameEnd * 1000)
+      this.delay(this._winGame, gameDuration * 1000)
       return this
     },
+    time: function () {
+      // +1 as the clock is always one frame behind
+      // FIXME: That's a lie, but not sure how often
+      return (this._f + 1) / Crafty.timer.FPS()
+    },
+    total: function () {
+      return this._lastFrame / Crafty.timer.FPS()
+    },
     reset: function () {
-      this._dt = 0
+      this._f = 0
       return this
     }
   })
 
-  var player
+  let player
+  let clock
+  let spawner
 
   // FIXME: Mouse lock is just too broken to work
   // // mouse lock mechanism
@@ -314,7 +282,7 @@ $(() => {
   //   this.requestPointerLock()
   // })
   //
-  // var lockOnce = true
+  // let lockOnce = true
   // function lockChange () {
   //   if (document.pointerLockElement === Crafty.stage.elem) {
   //     // enable mouse control, delayed to prevent sudden jump from
@@ -342,9 +310,7 @@ $(() => {
   // TODO(Dustine): Scenes
   Crafty.background('black')
 
-  var loops = 1
-  var clock
-  var spawner
+  let loops = 1
 
   Crafty.scene('Menu', function () {
     Crafty.e('2D, DOM, Text')
@@ -410,28 +376,9 @@ $(() => {
     // AAND start the spawn nonsence
     spawner.start()
   }, function () {
-    // mark the hit
-    // TODO Prevent access to internal variables
-    // updateTimebarProgress(clock._dt, clock._gameEnd)
-    clock.destroy()
-    // updateTimebarHits(clock._dt, clock._gameEnd)
-    // clock.reset()
-    // stop the spawner
-    spawner.reset()
-    // save current run's values
-    var firstFrame = player._firstFrame || 0
-    var previousFrames = player._previousFrames || []
-    // reset player
-    player._previousFrames = []
-    var tachId = player._tachId
-    player._tachId = undefined
-    // restart old ghosts
-    Crafty.trigger('EndLoop')
-    // ready the new ghost
-    if (previousFrames.length !== 0) {
-      Crafty.e('Ghost')
-        .Ghost(tachId, firstFrame, previousFrames)
-    }
+    // HACK: A scene change deletes the clock but only after the first frame,
+    //       so we have to kill it ahead of time
+    // clock.destroy()
   })
 
   Crafty.scene('Scratch', function () {
@@ -460,7 +407,7 @@ $(() => {
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
       .text(function () {
-        var latest = runs[runs.length - 1]
+        let latest = runs[runs.length - 1]
         return 'Score: ' + latest.score.toFixed(0) + ', over ' +
           formatTime(latest.time)
       })
@@ -470,11 +417,11 @@ $(() => {
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
       .text(function () {
-        var bestScore = runs[0]
+        let bestScore = runs[0]
         bestScore.i = 0
-        var bestTime = runs[0]
+        let bestTime = runs[0]
         bestTime.i = 0
-        for (var i = 0; i < runs.length; i++) {
+        for (let i = 0; i < runs.length; i++) {
           if (runs[i].score > bestScore.score) {
             bestScore = runs[i]
             bestScore.i = i
@@ -533,7 +480,7 @@ $(() => {
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
       .text(function () {
-        var latest = runs[runs.length - 1]
+        let latest = runs[runs.length - 1]
         return 'Score: ' + latest.score.toFixed(0) + ', over ' +
           formatTime(latest.time)
       })
@@ -543,11 +490,11 @@ $(() => {
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
       .text(function () {
-        var bestScore = runs[0]
+        let bestScore = runs[0]
         bestScore.i = 0
-        var bestTime = runs[0]
+        let bestTime = runs[0]
         bestTime.i = 0
-        for (var i = 0; i < runs.length; i++) {
+        for (let i = 0; i < runs.length; i++) {
           if (runs[i].score > bestScore.score) {
             bestScore = runs[i]
             bestScore.i = i
