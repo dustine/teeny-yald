@@ -28,29 +28,33 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
     _dt: 0,
     _gameEnd: 0,
     _tachId: 0,
-    init: function () {
+    init () {
       this._spawnFrame = 0
       this._frames = []
       this.count = {
         'White': 0,
         'Cyan': 0
       }
+      this.limit = {
+        'White': 200,
+        'Cyan': 3
+      }
       this.bind('EndLoop', function () {
         this.reset()
       })
     // this.requires('2D, Persist')
     },
-    _enterFrame: function () {
+    _enterFrame () {
       // console.log(this.count)
       if (!this._frames[this._dt]) {
         this._frames[this._dt] = this._generate()
       }
       this._spawn(this._frames[this._dt++])
     },
-    _generate: function () {
+    _generate () {
       // TODO: Regulate the Tachyon spawning to worsen as the game goes on
       // TODO: More kinds of Tachyons
-      let spawnBorder = BORDER / 2
+
       function shouldSpawn (_this) {
         return _this._dt >= _this._spawnFrame
       }
@@ -69,6 +73,14 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
         return spawns
       }
       function pickSide (elem) {
+        const spawnBorder = BORDER / 2
+        const corner = {
+          'topLeft': [BORDER, BORDER],
+          'topRight': [WIDTH - BORDER, BORDER],
+          'bottomLeft': [BORDER, HEIGHT - BORDER],
+          'bottomRight': [WIDTH - BORDER, HEIGHT - BORDER]
+        }
+
         // TODO: Instead of random angle, use random side to random edge point
         // Per example, from the *left* side you pick a point in any edge,
         //  that isn't the *left* edge, and then calculate the angle between
@@ -79,7 +91,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
           elem.y = spawnBorder
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           if (elem.x <= BORDER) {
             minAngle = angleBetween(pos, corner.bottomLeft)
             maxAngle = angleBetween(pos, corner.topRight)
@@ -104,7 +117,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = Math.random() * (WIDTH - BORDER * 2) + BORDER
           elem.y = spawnBorder
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           minAngle = angleBetween(pos, corner.topLeft)
           maxAngle = angleBetween(pos, corner.topRight)
           elem.angle = randomAngle(minAngle, maxAngle)
@@ -115,7 +129,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = WIDTH - spawnBorder
           elem.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           if (elem.y <= BORDER) {
             minAngle = angleBetween(pos, corner.topLeft)
             maxAngle = angleBetween(pos, corner.bottomRight)
@@ -134,7 +149,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = WIDTH - spawnBorder
           elem.y = Math.random() * (HEIGHT - BORDER * 2) + BORDER
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           minAngle = angleBetween(pos, corner.topLeft)
           maxAngle = angleBetween(pos, corner.bottomLeft)
           elem.angle = randomAngle(minAngle, maxAngle)
@@ -145,7 +161,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
           elem.y = HEIGHT - spawnBorder
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           if (elem.x <= BORDER) {
             minAngle = angleBetween(pos, corner.bottomRight)
             maxAngle = angleBetween(pos, corner.topLeft)
@@ -164,7 +181,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = Math.random() * (WIDTH - BORDER * 2) + BORDER
           elem.y = HEIGHT - spawnBorder
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           minAngle = angleBetween(pos, corner.bottomRight)
           maxAngle = angleBetween(pos, corner.bottomLeft)
           elem.angle = randomAngle(minAngle, maxAngle)
@@ -175,7 +193,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = BORDER / 2
           elem.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           if (elem.y <= BORDER) {
             minAngle = angleBetween(pos, corner.bottomLeft)
             maxAngle = angleBetween(pos, corner.topRight)
@@ -194,21 +213,13 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           elem.x = spawnBorder
           elem.y = Math.random() * (HEIGHT - BORDER * 2) + BORDER
           // destination
-          pos = [elem.x, elem.y]
+          let pos = [elem.x, elem.y]
+          let minAngle, maxAngle
           minAngle = angleBetween(pos, corner.bottomLeft)
           maxAngle = angleBetween(pos, corner.topLeft)
           elem.angle = randomAngle(minAngle, maxAngle)
         }
 
-        let minAngle
-        let maxAngle
-        let pos
-        let corner = {
-          'topLeft': [BORDER, BORDER],
-          'topRight': [WIDTH - BORDER, BORDER],
-          'bottomLeft': [BORDER, HEIGHT - BORDER],
-          'bottomRight': [WIDTH - BORDER, HEIGHT - BORDER]
-        }
         switch (elem.type) {
           case 'White':
             // origin
@@ -294,34 +305,32 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
       spawns.forEach(pickSide)
       return spawns
     },
-    _spawn: function (frame) {
+    _spawn (frame) {
+      var _this = this
       frame.forEach(function (elem) {
         // TODO: Add more Tachyon types here too
         // console.log(elem)
-        switch (elem.type) {
-          case 'White':
-            Crafty.e('WhiteTachyon')
-              .whiteTachyon(elem.x, elem.y, elem.angle, elem.speed, elem.id)
-            break
-          case 'Cyan':
-            Crafty.e('CyanTachyon')
-              .cyanTachyon(elem.x, elem.y, elem.angle, elem.speed, elem.maxSize)
-            break
+        if (_this.count[elem.type] < _this.limit[elem.type]) {
+          let tachyon = Crafty.e('Tachyon')
+            .type(elem.type)
+          let constructor = elem.type.toLowerCase() + 'Tachyon'
+          tachyon[constructor](elem)
+        } else {
+          // TODO: Spawn limit
         }
-
       })
       // console.log('whiteTachyons', Crafty('WhiteTachyon').length)
     },
-    spawner: function (gameEnd) {
+    spawner (gameEnd) {
       this._gameEnd = gameEnd * Crafty.timer.FPS()
       return this
     },
-    reset: function () {
+    reset () {
       this._dt = 0
       this.unbind('EnterFrame')
       return this
     },
-    start: function () {
+    start () {
       this.bind('EnterFrame', this._enterFrame)
       return this
     }
