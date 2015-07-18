@@ -1,4 +1,6 @@
-module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
+module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_BORDER, SIZE) {
+  const FADE_TIME = 2000
+
   Crafty.c('Tachyon', {
     init () {
       this.requires('2D, DOM, Color, Tween, Collision')
@@ -18,7 +20,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
       // Crafty('Spawner').get(0).count[this.type]++
       this.color(type)
       // TODO: Make fade-in(/out) time a constant
-      this.tween({alpha: 1}, 2000)
+      this.tween({alpha: 1}, FADE_TIME)
       this.addComponent(type + 'Tachyon')
       return this
     }
@@ -43,12 +45,12 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
     },
     debugTachyon ({origin: origin, dest: dest, angle: angle, color: color, childColor: childColor}) {
       var child = Crafty.e('Tachyon')
-                  .type('Debug')
-                  ._init({
-                    origin: dest,
-                    angle,
-                    color: childColor || '#ffff00'
-                  })
+        .type('Debug')
+        ._init({
+          origin: dest,
+          angle,
+          color: childColor || '#ffff00'
+        })
       // this.attach(child)
       var parent = this._init({origin: origin, angle: angle, color: color})
       this.attach(child)
@@ -68,19 +70,19 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
     },
     _enterFrame () {
       // remove far-gone particles
-      if (this._x < -SPAWN_BORDER) {
+      if (this._x < -DESPAWN_BORDER) {
         this.destroy()
         return
       }
-      if (this._x > WIDTH - this.w + SPAWN_BORDER) {
+      if (this._x > WIDTH - this.w + DESPAWN_BORDER) {
         this.destroy()
         return
       }
-      if (this._y < -SPAWN_BORDER) {
+      if (this._y < -DESPAWN_BORDER) {
         this.destroy()
         return
       }
-      if (this._y > HEIGHT - this.h + SPAWN_BORDER) {
+      if (this._y > HEIGHT - this.h + DESPAWN_BORDER) {
         this.destroy()
         return
       }
@@ -123,8 +125,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
     _enterFrame () {
       switch (this.state) {
         case 'Growing':
-          this.w += this._speed
-          if (this._w >= this.maxSize) {
+          if (this._w + this._speed >= this.maxSize) {
             this.w = this.maxSize
             this.state = 'Pause'
             this.x += Math.cos(this._angle) * (this._w - this.minSize)
@@ -132,25 +133,33 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, SIZE) {
             this.rotation += 180
             this.delay(function () {
               this.state = 'Shrinking'
-            }, 2000)
+            }, FADE_TIME * 2)
             // this.flip('X')
+          } else {
+            this.w += this._speed
           }
           break
         case 'Shrinking':
-          this.w -= this._speed
-          if (this._w <= this.minSize) {
+          if (this._w - this._speed <= this.minSize) {
+            this.w = this.minSize
             this.unbind('EnterFrame', this._enterFrame)
             this.removeComponent('Deadly')
             this.one('TweenEnd', function () {
               this.destroy()
             })
-            this.tween({alpha: 0}, 2000)
+            this.tween({alpha: 0}, FADE_TIME / 2)
+          } else {
+            this.w -= this._speed
           }
           break
       }
     },
-    cyanTachyon ({origin: origin, angle: angle, speed: speed, maxSize: maxSize}) {
-      this.maxSize = maxSize + this._w
+    cyanTachyon ({origin: origin, dest: dest, angle: angle, speed: speed}) {
+      this.maxSize = Math.hypot(
+        Math.abs(origin.y - dest.y) + SPAWN_BORDER,
+        Math.abs(origin.x - dest.x) + SPAWN_BORDER
+      ) + this.w
+      dest = {x: WIDTH / 2, y: HEIGHT / 2}
       this._angle = angle
       this._speed = speed
       this.x = origin.x - Math.round(SIZE / 2)

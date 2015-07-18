@@ -1,3 +1,16 @@
+// TODO: Get a library for this kind of stuff mkay
+// Fisher-Yates
+function shuffle (array) {
+  var m = array.length
+  var t, i
+  while (m) {
+    i = Math.floor(Math.random() * m--)
+    t = array[m]
+    array[m] = array[i]
+    array[i] = t
+  }
+}
+
 function scale (val, from, to) {
   return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
 }
@@ -23,9 +36,10 @@ function angleBetween (origin, dest) {
 //   }
 // }
 
-module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
+module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_BORDER) {
   const FPS = Crafty.timer.FPS()
-  let types = ['White', 'Cyan']
+  let types = ['White']
+  let specials = ['Cyan']
   // let types = ['Debug']
 
   Crafty.c('Spawner', {
@@ -61,66 +75,68 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
     _generate () {
       // TODO: Regulate the Tachyon spawning to worsen as the game goes on
       // TODO: More kinds of Tachyons
+      let spawner = this
       let progression = this._f / this._lastFrame
 
-      function shouldSpawn () {
-        return this._f >= this._spawnFrame
+      function canSpawn () {
+        return spawner._f >= spawner._spawnFrame
       }
 
-      // pick the types of spawn
-      function pickTypes () {
-        let _this = this
+      function createWhiteTachyons () {
         // TODO: Move it upscope so we can add more tests to it
         // check if a type can spawn with the available components
         function canSpawn (type) {
-          if (_this.count[type] >= _this.limit[type]) {
-            return false
-          }
-          if (type === 'Cyan') return false
+          if (spawner.count[type] >= spawner.limit[type]) return false
+          // if (type === 'Cyan') return false
           return true
         }
 
-        // add type-specific
-        function addTypeLogic (elem) {
-          switch (elem.type) {
+        // the max number allowed of a particle to spawn in a round
+        function typeWiseRandomMax (type) {
+          let min, randomMax
+          switch (type) {
             case 'White':
-              let id = _this._whiteId++
-              elem.id = id
-              elem.speed = scale(Math.random(), [0, 1], [4, 6])
-              break
-            case 'Cyan':
-              // elem.maxSize = 500
-              elem.speed = scale(Math.random(), [0, 1], [1, 2])
-              break
+              min = progression * 20
+              randomMax = Math.ceil(scale(Math.random() * Math.pow(progression, 2), [0, 1], [min, min + 10]))
+              return randomMax === 0 ? 1 : randomMax
+            // case 'Cyan':
+            //   if (progression < 0.25) return 0
+            //   min = scale(progression, [0.25, 1], [0, 3])
+            //   randomMax = Math.round(Math.random() * min)
+            //   console.log(randomMax)
+            //   return randomMax
           }
         }
 
         // fill the spawn thing with the info
         let spawns = []
-        types.forEach(function (type, i) {
+        types.forEach(function (type) {
           // TODO: Take game duration and Tach type into consideration
-          let min = progression * 20
-          let max = min + 10
-          let randomMax = Math.ceil(scale(Math.random() * Math.pow(progression, 2), [0, 1], [min, max]))
-          // let randomMax = 100
+
+          let randomMax = typeWiseRandomMax(type)
           for (let i = 0; i < randomMax; i++) {
             if (!canSpawn(type)) break
-            let elem = {
-              type: type,
-              speed: scale(Math.random(), [0, 1], [1, 1])
-            }
+            let elem = {type}
             addTypeLogic(elem)
             spawns.push(elem)
-            _this.count[elem.type]++
+            spawner.count[elem.type]++
           }
         })
         return spawns
       }
 
       // add location and movement direction data
-      function pickSide (elem) {
-        const spawnBorder = BORDER / 2
+      function pickMovement (elem) {
+        // type-wise logic
+        let safePerimeter = 0.8
+        switch (elem.type) {
+          case 'Cyan':
+            // origin
+            safePerimeter = 0
+            break
+        }
 
+        // origin, dest
         // NOTE: Sides are inside the border, versus the playing field's edges
         const spawnHeight = HEIGHT - BORDER * 2
         const spawnWidth = WIDTH - BORDER * 2
@@ -128,8 +144,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
         function setTopDestination (elem, closeSide = 1) {
           // origin
           elem.origin = {}
-          elem.origin.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
-          elem.origin.y = spawnBorder
+          elem.origin.x = Math.random() * (WIDTH - (BORDER - SPAWN_BORDER) * 2) + (BORDER - SPAWN_BORDER)
+          elem.origin.y = SPAWN_BORDER
           // destination
           elem.dest = {}
           let perimeter = Math.random() * (spawnHeight * closeSide * 2 + spawnWidth)
@@ -157,8 +173,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
         function setRightDestination (elem, closeSide = 1) {
           // origin
           elem.origin = {}
-          elem.origin.x = WIDTH - spawnBorder
-          elem.origin.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
+          elem.origin.x = WIDTH - SPAWN_BORDER
+          elem.origin.y = Math.random() * (HEIGHT - (BORDER - SPAWN_BORDER) * 2) + (BORDER - SPAWN_BORDER)
           // destination
           elem.dest = {}
           let perimeter = Math.random() * (spawnWidth * closeSide * 2 + spawnHeight)
@@ -186,8 +202,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
         function setBottomDestination (elem, closeSide = 1) {
           // origin
           elem.origin = {}
-          elem.origin.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
-          elem.origin.y = HEIGHT - spawnBorder
+          elem.origin.x = Math.random() * (WIDTH - (BORDER - SPAWN_BORDER) * 2) + (BORDER - SPAWN_BORDER)
+          elem.origin.y = HEIGHT - SPAWN_BORDER
           // destination
           elem.dest = {}
           let perimeter = Math.random() * (spawnHeight * closeSide * 2 + spawnWidth)
@@ -216,7 +232,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           // origin
           elem.origin = {}
           elem.origin.x = BORDER / 2
-          elem.origin.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
+          elem.origin.y = Math.random() * (HEIGHT - (BORDER - SPAWN_BORDER) * 2) + (BORDER - SPAWN_BORDER)
           // destination
           elem.dest = {}
           let perimeter = Math.random() * (spawnWidth * closeSide * 2 + spawnHeight)
@@ -241,46 +257,107 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
           }
         }
 
-        // TODO: Abstract, the if statements could be after the switch
-        //  The switch only takes into consideration the sideRange on the dest
-        switch (elem.type) {
-          case 'White':
-            // origin
-            let perimeter = (HEIGHT + WIDTH) * 2
-            let side = Math.random() * perimeter
+        let perimeter = (HEIGHT + WIDTH) * 2
+        let side = Math.random() * perimeter
 
-            if (side < WIDTH) {
-              setTopDestination(elem, 0.8)
-            } else if (side < WIDTH + HEIGHT) {
-              setRightDestination(elem, 0.8)
-            } else if (side < WIDTH * 2 + HEIGHT) {
-              setBottomDestination(elem, 0.8)
-            } else if (side < perimeter) {
-              setLeftDestination(elem, 0.8)
-            } else {
-              throw {
-                name: 'unknown side',
-                value: side
-              }
-            }
-            break
+        if (side < WIDTH) {
+          setTopDestination(elem, safePerimeter)
+        } else if (side < WIDTH + HEIGHT) {
+          setRightDestination(elem, safePerimeter)
+        } else if (side < WIDTH * 2 + HEIGHT) {
+          setBottomDestination(elem, safePerimeter)
+        } else if (side < perimeter) {
+          setLeftDestination(elem, safePerimeter)
+        } else {
+          throw {
+            name: 'unknown side',
+            value: side
+          }
         }
 
-        // angles
+        // angle
         elem.angle = angleBetween(elem.origin, elem.dest)
       }
 
-      if (!shouldSpawn.call(this)) {
+      // add type-specific logic
+      function addTypeLogic (elem) {
+        switch (elem.type) {
+          case 'White':
+            let id = spawner._whiteId++
+            elem.id = id
+            elem.speed = scale(Math.random(), [0, 1], [4, 6])
+            break
+          case 'Cyan':
+            // elem.maxSize = 500
+            elem.speed = scale(Math.random(), [0, 1], [3, 5])
+            break
+        }
+      }
+
+      if (!canSpawn()) {
         return []
       }
-      // reset spawner counter
-      // let minTime = scale(this._f / this._lastFrame, [0, 1], [FPS * 2, FPS])
-      // let maxTime = minTime + FPS / 2
-      this._spawnFrame = this._f + scale(Math.random(), [0, 1], [FPS * 0.5, FPS * 1.5])
-      // console.log('next spawn', this._spawnFrame - this._dt, 'dt', this._dt, 'of', this._dt / this._gameEnd)
-      // console.log('maxTimeLimit', maxTimeLimit, 'of', this._dt / this._gameEnd)
-      let spawns = pickTypes.call(this)
-      spawns.forEach(pickSide)
+
+      function resetSpawnCounter () {
+        // reset spawner counter
+        // let minTime = scale(this._f / this._lastFrame, [0, 1], [FPS * 2, FPS])
+        // let maxTime = minTime + FPS / 2
+        spawner._spawnFrame = spawner._f + scale(Math.random(), [0, 1], [FPS * 0.5, FPS * 1.5])
+      }
+
+      resetSpawnCounter()
+
+      // summon normal spawns
+      let spawns = createWhiteTachyons()
+
+      spawns.forEach((elem) => {
+        pickMovement(elem)
+        addTypeLogic(elem)
+      })
+
+      // attempt special spawns
+      function canAddSpecial (special) {
+        if (special) {
+          switch (special.type) {
+            case 'Cyan':
+              return spawner.count.Cyan < spawner.limit.Cyan
+          }
+          return false
+        }
+        return spawner._specialFrame <= spawner._f
+      }
+
+      function addLimitingLogic (special) {
+        spawner.count[special.type]++
+      }
+
+      function resetSpecialCounter () {
+        let min = scale(progression, [0, 1], [FPS * 4, FPS * 2])
+        let max = min + FPS / 2
+        spawner._specialFrame = spawner._f + scale(Math.random(), [0, 1], [min, max])
+      }
+
+      if (canAddSpecial()) {
+        resetSpecialCounter()
+        let special = {}
+        // pick random and valid type
+        shuffle(specials)
+        for (let i = 0; i < specials.length; i++) {
+          special.type = specials[i]
+          if (canAddSpecial(special)) {
+            addLimitingLogic(special)
+            break
+          }
+          special.type = undefined
+        }
+        // check if there was a type to begin with
+        if (special.type) {
+          console.log(special.type)
+          pickMovement(special)
+          addTypeLogic(special)
+          spawns.push(special)
+        }
+      }
       return spawns
     },
     _spawn (frame) {
@@ -302,11 +379,13 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
     spawner (gameDuration) {
       // this._gameEnd = gameEnd * Crafty.timer.FPS()
       this._lastFrame = gameDuration * Crafty.timer.FPS()
+      this.reset()
       return this
     },
     reset () {
       this._f = 0
       this._spawnFrame = 0
+      this._specialFrame = this._lastFrame / 4
       this.unbind('EnterFrame')
       return this
     },
