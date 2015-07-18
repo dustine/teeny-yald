@@ -151,27 +151,49 @@ gulp.task('imagemin', () => {
       .pipe(gulp.dest(dest))
 })
 
-gulp.task('browserify', () => {
+gulp.task('browserify-main', () => {
+  let source = path.join(__dirname, dirs.source, dirs.scripts, 'main.js')
   let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''))
-  for (var filepath of config.mainScripts) {
-    browserify(
-      path.join(__dirname, dirs.source, dirs.scripts, filepath), {
-      debug: true,
-      transform: [
-        require('envify'),
-        require('babelify')
-      ]
-    }).bundle()
-      .pipe(vsource(path.basename(filepath)))
-      .pipe(buffer())
-      .pipe(plugins.sourcemaps.init({loadMaps: true}))
-      .pipe(gulpif(production, plugins.uglify()))
-      .on('error', plugins.util.log)
-      .pipe(plugins.sourcemaps.write('./'))
-      .pipe(gulp.dest(dest))
-      .pipe(browserSync.stream())
-  }
+  return browserify(
+    source, {
+    debug: true,
+    transform: [
+      require('envify'),
+      require('babelify')
+    ]
+  }).bundle()
+    .pipe(vsource(path.basename(source)))
+    .pipe(buffer())
+    .pipe(plugins.sourcemaps.init({loadMaps: true}))
+    .pipe(gulpif(production, plugins.uglify()))
+    .on('error', plugins.util.log)
+    .pipe(plugins.sourcemaps.write('./'))
+    .pipe(gulp.dest(dest))
+    .pipe(browserSync.stream())
 })
+
+gulp.task('browserify-game', () => {
+  let source = path.join(__dirname, dirs.source, dirs.scripts, 'game.js')
+  let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''))
+  return browserify(
+    source, {
+    debug: true,
+    transform: [
+      require('envify'),
+      require('babelify')
+    ]
+  }).bundle()
+    .pipe(vsource(path.basename(source)))
+    .pipe(buffer())
+    .pipe(plugins.sourcemaps.init({loadMaps: true}))
+    .pipe(gulpif(production, plugins.uglify()))
+    .on('error', plugins.util.log)
+    .pipe(plugins.sourcemaps.write('./'))
+    .pipe(gulp.dest(dest))
+    .pipe(browserSync.stream())
+})
+
+gulp.task('browserify', ['browserify-main', 'browserify-game'])
 
 // Clean
 gulp.task('clean', del.bind(null, [
