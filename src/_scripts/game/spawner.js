@@ -4,29 +4,33 @@ function scale (val, from, to) {
 
 function angleBetween (origin, dest) {
   // y axis is flipped
-  return Math.atan2(-(dest[1] - origin[1]), dest[0] - origin[0])
+  return Math.atan2(-(dest.y - origin.y), dest.x - origin.x)
 }
 
-function randomAngle (min, max) {
-  if (min > max) {
-    max += 2 * Math.PI
-    let result = Math.random() * (max - min) + min
-    while (result < -Math.PI) {
-      result += 2 * Math.PI
-    }
-    while (result > Math.PI) {
-      result -= 2 * Math.PI
-    }
-    return result
-  } else {
-    return Math.random() * (max - min) + min
-  }
-}
+// function randomAngle (min, max) {
+//   if (min > max) {
+//     max += 2 * Math.PI
+//     let result = Math.random() * (max - min) + min
+//     while (result < -Math.PI) {
+//       result += 2 * Math.PI
+//     }
+//     while (result > Math.PI) {
+//       result -= 2 * Math.PI
+//     }
+//     return result
+//   } else {
+//     return Math.random() * (max - min) + min
+//   }
+// }
 
 module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
+  const FPS = Crafty.timer.FPS()
+  let types = ['White', 'Cyan']
+  // let types = ['Debug']
+
   Crafty.c('Spawner', {
-    _dt: 0,
-    _gameEnd: 0,
+    _f: 0,
+    _lastFrame: 0,
     _tachId: 0,
     init () {
       this._spawnFrame = 0
@@ -37,204 +41,222 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
       }
       this.limit = {
         'White': 200,
-        'Cyan': 3
+        'Cyan': 3,
+        'Debug': 1000
       }
       this.bind('EndLoop', function () {
         this.reset()
       })
+      this._whiteId = 0
     // this.requires('2D, Persist')
     },
     _enterFrame () {
       // console.log(this.count)
-      if (!this._frames[this._dt]) {
-        this._frames[this._dt] = this._generate()
+      if (!this._frames[this._f]) {
+        this._frames[this._f] = this._generate()
       }
-      this._spawn(this._frames[this._dt++])
+      this._spawn(this._frames[this._f++])
+      // console.log(this.count)
     },
     _generate () {
       // TODO: Regulate the Tachyon spawning to worsen as the game goes on
       // TODO: More kinds of Tachyons
+      let progression = this._f / this._lastFrame
 
-      function shouldSpawn (_this) {
-        return _this._dt >= _this._spawnFrame
+      function shouldSpawn () {
+        return this._f >= this._spawnFrame
       }
-      function pickTypes (_this) {
-        let spawns = []
-        let randomMax = Math.random() * 5 + 1
-        for (let i = 0; i < randomMax; i++) {
-          let id = _this._tachId++
-          spawns.push({
-            type: 'Cyan',
-            id: id,
-            // maxSize: 500,
-            speed: scale(Math.random(), [0, 1], [1, 1])
-          })
+
+      // pick the types of spawn
+      function pickTypes () {
+        let _this = this
+        // TODO: Move it upscope so we can add more tests to it
+        // check if a type can spawn with the available components
+        function canSpawn (type) {
+          if (_this.count[type] >= _this.limit[type]) {
+            return false
+          }
+          if (type === 'Cyan') return false
+          return true
         }
+
+        // add type-specific
+        function addTypeLogic (elem) {
+          switch (elem.type) {
+            case 'White':
+              let id = _this._whiteId++
+              elem.id = id
+              elem.speed = scale(Math.random(), [0, 1], [4, 6])
+              break
+            case 'Cyan':
+              // elem.maxSize = 500
+              elem.speed = scale(Math.random(), [0, 1], [1, 2])
+              break
+          }
+        }
+
+        // fill the spawn thing with the info
+        let spawns = []
+        types.forEach(function (type, i) {
+          // TODO: Take game duration and Tach type into consideration
+          let min = progression * 20
+          let max = min + 10
+          let randomMax = Math.ceil(scale(Math.random() * Math.pow(progression, 2), [0, 1], [min, max]))
+          // let randomMax = 100
+          for (let i = 0; i < randomMax; i++) {
+            if (!canSpawn(type)) break
+            let elem = {
+              type: type,
+              speed: scale(Math.random(), [0, 1], [1, 1])
+            }
+            addTypeLogic(elem)
+            spawns.push(elem)
+            _this.count[elem.type]++
+          }
+        })
         return spawns
       }
+
+      // add location and movement direction data
       function pickSide (elem) {
         const spawnBorder = BORDER / 2
-        const corner = {
-          'topLeft': [BORDER, BORDER],
-          'topRight': [WIDTH - BORDER, BORDER],
-          'bottomLeft': [BORDER, HEIGHT - BORDER],
-          'bottomRight': [WIDTH - BORDER, HEIGHT - BORDER]
-        }
 
-        // TODO: Instead of random angle, use random side to random edge point
-        // Per example, from the *left* side you pick a point in any edge,
-        //  that isn't the *left* edge, and then calculate the angle between
-        //  those, which is trivially easy with atan2 (just don't forget to
-        //  negate the y axis)
-        function topSide (elem) {
+        // NOTE: Sides are inside the border, versus the playing field's edges
+        const spawnHeight = HEIGHT - BORDER * 2
+        const spawnWidth = WIDTH - BORDER * 2
+
+        function setTopDestination (elem, closeSide = 1) {
           // origin
-          elem.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
-          elem.y = spawnBorder
+          elem.origin = {}
+          elem.origin.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
+          elem.origin.y = spawnBorder
           // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          if (elem.x <= BORDER) {
-            minAngle = angleBetween(pos, corner.bottomLeft)
-            maxAngle = angleBetween(pos, corner.topRight)
-          } else if (elem.x >= WIDTH - BORDER) {
-            minAngle = angleBetween(pos, corner.topLeft)
-            maxAngle = angleBetween(pos, corner.bottomRight)
+          elem.dest = {}
+          let perimeter = Math.random() * (spawnHeight * closeSide * 2 + spawnWidth)
+          if (perimeter < spawnHeight * closeSide) {
+            // left
+            elem.dest.x = BORDER
+            elem.dest.y = perimeter + BORDER + (spawnHeight * (1 - closeSide))
+          } else if (perimeter < spawnHeight * closeSide + spawnWidth) {
+            // bottom
+            elem.dest.x = (perimeter - spawnHeight * closeSide) + BORDER
+            elem.dest.y = HEIGHT - BORDER
+          } else if (perimeter < spawnHeight * closeSide * 2 + spawnWidth) {
+            // right
+            elem.dest.x = WIDTH - BORDER
+            elem.dest.y = (HEIGHT - BORDER) - (perimeter - spawnHeight * closeSide - spawnWidth)
           } else {
-            minAngle = angleBetween(pos, corner.topLeft)
-            maxAngle = angleBetween(pos, corner.topRight)
+            throw {
+              error: 'perimeter too big',
+              perimeter: perimeter,
+              elem: elem
+            }
           }
-          elem.angle = randomAngle(minAngle, maxAngle)
-
-          // TODO: Redo all these
-          // For debug, makes everything spawn inside the viewframe
-          // elem.x = range(elem.x, [-spawnRegion, WIDTH + spawnRegion],
-          //   [BORDER, WIDTH - BORDER])
-          // elem.y = BORDER
         }
 
-        function topEdge (elem) {
+        function setRightDestination (elem, closeSide = 1) {
           // origin
-          elem.x = Math.random() * (WIDTH - BORDER * 2) + BORDER
-          elem.y = spawnBorder
+          elem.origin = {}
+          elem.origin.x = WIDTH - spawnBorder
+          elem.origin.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
           // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          minAngle = angleBetween(pos, corner.topLeft)
-          maxAngle = angleBetween(pos, corner.topRight)
-          elem.angle = randomAngle(minAngle, maxAngle)
-        }
-
-        function rightSide (elem) {
-          // origin
-          elem.x = WIDTH - spawnBorder
-          elem.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
-          // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          if (elem.y <= BORDER) {
-            minAngle = angleBetween(pos, corner.topLeft)
-            maxAngle = angleBetween(pos, corner.bottomRight)
-          } else if (elem.y >= HEIGHT - BORDER) {
-            minAngle = angleBetween(pos, corner.topRight)
-            maxAngle = angleBetween(pos, corner.bottomLeft)
+          elem.dest = {}
+          let perimeter = Math.random() * (spawnWidth * closeSide * 2 + spawnHeight)
+          if (perimeter < spawnWidth * closeSide) {
+            // top
+            elem.dest.x = (WIDTH - BORDER) - (perimeter + spawnWidth * (1 - closeSide))
+            elem.dest.y = BORDER
+          } else if (perimeter < spawnWidth * closeSide + spawnHeight) {
+            // left
+            elem.dest.x = BORDER
+            elem.dest.y = (perimeter - spawnWidth * closeSide) + BORDER
+          } else if (perimeter < spawnWidth * closeSide * 2 + spawnHeight) {
+            // bottom
+            elem.dest.x = (perimeter - spawnWidth * closeSide - spawnHeight) + BORDER
+            elem.dest.y = HEIGHT - BORDER
           } else {
-            minAngle = angleBetween(pos, corner.topLeft)
-            maxAngle = angleBetween(pos, corner.bottomLeft)
+            throw {
+              error: 'perimeter too big',
+              perimeter: perimeter,
+              elem: elem
+            }
           }
-          elem.angle = randomAngle(minAngle, maxAngle)
         }
 
-        function rightEdge (elem) {
+        function setBottomDestination (elem, closeSide = 1) {
           // origin
-          elem.x = WIDTH - spawnBorder
-          elem.y = Math.random() * (HEIGHT - BORDER * 2) + BORDER
+          elem.origin = {}
+          elem.origin.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
+          elem.origin.y = HEIGHT - spawnBorder
           // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          minAngle = angleBetween(pos, corner.topLeft)
-          maxAngle = angleBetween(pos, corner.bottomLeft)
-          elem.angle = randomAngle(minAngle, maxAngle)
-        }
-
-        function bottomSide (elem) {
-          // origin
-          elem.x = Math.random() * (WIDTH - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
-          elem.y = HEIGHT - spawnBorder
-          // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          if (elem.x <= BORDER) {
-            minAngle = angleBetween(pos, corner.bottomRight)
-            maxAngle = angleBetween(pos, corner.topLeft)
-          } else if (elem.x >= WIDTH - BORDER) {
-            minAngle = angleBetween(pos, corner.topRight)
-            maxAngle = angleBetween(pos, corner.bottomLeft)
+          elem.dest = {}
+          let perimeter = Math.random() * (spawnHeight * closeSide * 2 + spawnWidth)
+          if (perimeter < spawnHeight * closeSide) {
+            // right
+            elem.dest.x = WIDTH - BORDER
+            elem.dest.y = (HEIGHT - BORDER) - (perimeter + spawnHeight * (1 - closeSide))
+          } else if (perimeter < spawnHeight * closeSide + spawnWidth) {
+            // top
+            elem.dest.x = (WIDTH - BORDER) - (perimeter - spawnHeight * closeSide)
+            elem.dest.y = BORDER
+          } else if (perimeter < spawnHeight * closeSide * 2 + spawnWidth) {
+            // left
+            elem.dest.x = BORDER
+            elem.dest.y = perimeter + BORDER - (spawnHeight * closeSide + spawnWidth)
           } else {
-            minAngle = angleBetween(pos, corner.bottomRight)
-            maxAngle = angleBetween(pos, corner.bottomLeft)
+            throw {
+              error: 'perimeter too big',
+              perimeter: perimeter,
+              elem: elem
+            }
           }
-          elem.angle = randomAngle(minAngle, maxAngle)
         }
 
-        function bottomEdge (elem) {
+        function setLeftDestination (elem, closeSide = 1) {
           // origin
-          elem.x = Math.random() * (WIDTH - BORDER * 2) + BORDER
-          elem.y = HEIGHT - spawnBorder
+          elem.origin = {}
+          elem.origin.x = BORDER / 2
+          elem.origin.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
           // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          minAngle = angleBetween(pos, corner.bottomRight)
-          maxAngle = angleBetween(pos, corner.bottomLeft)
-          elem.angle = randomAngle(minAngle, maxAngle)
-        }
-
-        function leftSide (elem) {
-          // origin
-          elem.x = BORDER / 2
-          elem.y = Math.random() * (HEIGHT - (BORDER - spawnBorder) * 2) + (BORDER - spawnBorder)
-          // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          if (elem.y <= BORDER) {
-            minAngle = angleBetween(pos, corner.bottomLeft)
-            maxAngle = angleBetween(pos, corner.topRight)
-          } else if (elem.y >= HEIGHT - BORDER) {
-            minAngle = angleBetween(pos, corner.bottomRight)
-            maxAngle = angleBetween(pos, corner.topLeft)
+          elem.dest = {}
+          let perimeter = Math.random() * (spawnWidth * closeSide * 2 + spawnHeight)
+          if (perimeter < spawnWidth * closeSide) {
+            // bottom
+            elem.dest.x = BORDER + (perimeter + spawnWidth * (1 - closeSide))
+            elem.dest.y = HEIGHT - BORDER
+          } else if (perimeter < spawnWidth * closeSide + spawnHeight) {
+            // right
+            elem.dest.x = WIDTH - BORDER
+            elem.dest.y = (HEIGHT - BORDER) - (perimeter - spawnWidth * closeSide)
+          } else if (perimeter < spawnWidth * closeSide * 2 + spawnHeight) {
+            // top
+            elem.dest.x = (WIDTH - BORDER) - (perimeter - spawnWidth * closeSide - spawnHeight)
+            elem.dest.y = BORDER
           } else {
-            minAngle = angleBetween(pos, corner.bottomLeft)
-            maxAngle = angleBetween(pos, corner.topLeft)
+            throw {
+              error: 'perimeter too big',
+              perimeter: perimeter,
+              elem: elem
+            }
           }
-          elem.angle = randomAngle(minAngle, maxAngle)
         }
 
-        function leftEdge (elem) {
-          // origin
-          elem.x = spawnBorder
-          elem.y = Math.random() * (HEIGHT - BORDER * 2) + BORDER
-          // destination
-          let pos = [elem.x, elem.y]
-          let minAngle, maxAngle
-          minAngle = angleBetween(pos, corner.bottomLeft)
-          maxAngle = angleBetween(pos, corner.topLeft)
-          elem.angle = randomAngle(minAngle, maxAngle)
-        }
-
+        // TODO: Abstract, the if statements could be after the switch
+        //  The switch only takes into consideration the sideRange on the dest
         switch (elem.type) {
           case 'White':
             // origin
-            let side = Math.random()
-            const spawningWidth = WIDTH + BORDER
-            const spawningHeight = HEIGHT + BORDER
-            let spawnPerimeter = spawningHeight * 2 + spawningWidth * 2
-            if (side < spawningWidth / spawnPerimeter) {
-              topSide(elem)
-            } else if (side < (spawningWidth + spawningHeight) / spawnPerimeter) {
-              rightSide(elem)
-            } else if (side < (spawningWidth * 2 + spawningHeight) / spawnPerimeter) {
-              bottomSide(elem)
-            } else if (side < 1) {
-              leftSide(elem)
+            let perimeter = (HEIGHT + WIDTH) * 2
+            let side = Math.random() * perimeter
+
+            if (side < WIDTH) {
+              setTopDestination(elem, 0.8)
+            } else if (side < WIDTH + HEIGHT) {
+              setRightDestination(elem, 0.8)
+            } else if (side < WIDTH * 2 + HEIGHT) {
+              setBottomDestination(elem, 0.8)
+            } else if (side < perimeter) {
+              setLeftDestination(elem, 0.8)
             } else {
               throw {
                 name: 'unknown side',
@@ -242,91 +264,49 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER) {
               }
             }
             break
-          case 'Cyan':
-            // let edge = Math.random()
-            let perimeter = WIDTH * 2 + HEIGHT * 2
-            let edge = WIDTH / perimeter
-            if (edge < WIDTH / perimeter) {
-              topEdge(elem)
-              if (elem.angle < -Math.PI / 2) {
-                // left edge
-                let w1 = -(elem.x - corner.topLeft[0] + spawnBorder) / Math.cos(elem.angle)
-                // bottom edge
-                let w2 = -(HEIGHT - spawnBorder * 2) / Math.sin(elem.angle)
-                elem.maxSize = Math.min(w1, w2)
-              } else {
-                // bottom edge
-                let w2 = -(HEIGHT - spawnBorder * 2) / Math.sin(elem.angle)
-                // right edge
-                let w3 = -(elem.x - corner.topRight[0] - spawnBorder) / Math.cos(elem.angle)
-                elem.maxSize = Math.min(w2, w3)
-              }
-            } else if (edge < (WIDTH + HEIGHT) / perimeter) {
-              rightEdge(elem)
-              if (elem.angle > 0) {
-                // top edge
-                let w1 = (elem.y - corner.topRight[1] - spawnBorder) / Math.sin(elem.angle)
-                // left edge
-                let w2 = -(WIDTH - spawnBorder * 2) / Math.cos(elem.angle)
-                console.log(w1, w2)
-                elem.maxSize = Math.min(w1, w2)
-              } else {
-                // left edge
-                let w2 = -(WIDTH - spawnBorder * 2) / Math.cos(elem.angle)
-                // bottom edge
-                let w3 = (elem.y - corner.bottomRight[1] + spawnBorder) / Math.sin(elem.angle)
-                elem.maxSize = Math.min(w2, w3)
-              }
-            } else if (edge < (WIDTH * 2 + HEIGHT) / perimeter) {
-              bottomEdge(elem)
-            } else if (edge < 1) {
-              leftEdge(elem)
-            } else {
-              throw {
-                name: 'unknown edge',
-                value: edge
-              }
-            }
-            // console.log(elem.x, elem.y, edge)
-
-            break
         }
+
+        // angles
+        elem.angle = angleBetween(elem.origin, elem.dest)
       }
 
-      if (!shouldSpawn(this)) {
+      if (!shouldSpawn.call(this)) {
         return []
       }
       // reset spawner counter
-      let maxTimeLimit = scale(this._dt / this._gameEnd, [0, 1], [100, 20])
-      this._spawnFrame = this._dt + scale(Math.random(), [0, 1], [maxTimeLimit - 10, maxTimeLimit])
+      // let minTime = scale(this._f / this._lastFrame, [0, 1], [FPS * 2, FPS])
+      // let maxTime = minTime + FPS / 2
+      this._spawnFrame = this._f + scale(Math.random(), [0, 1], [FPS * 0.5, FPS * 1.5])
       // console.log('next spawn', this._spawnFrame - this._dt, 'dt', this._dt, 'of', this._dt / this._gameEnd)
       // console.log('maxTimeLimit', maxTimeLimit, 'of', this._dt / this._gameEnd)
-      let spawns = pickTypes(this)
+      let spawns = pickTypes.call(this)
       spawns.forEach(pickSide)
       return spawns
     },
     _spawn (frame) {
-      var _this = this
+      // var _this = this
       frame.forEach(function (elem) {
         // TODO: Add more Tachyon types here too
         // console.log(elem)
-        if (_this.count[elem.type] < _this.limit[elem.type]) {
-          let tachyon = Crafty.e('Tachyon')
-            .type(elem.type)
-          let constructor = elem.type.toLowerCase() + 'Tachyon'
-          tachyon[constructor](elem)
-        } else {
-          // TODO: Spawn limit
-        }
+        // if (_this.count[elem.type] < _this.limit[elem.type]) {
+        let tachyon = Crafty.e('Tachyon')
+          .type(elem.type)
+        let constructor = elem.type.toLowerCase() + 'Tachyon'
+        tachyon[constructor](elem)
+        // } else {
+        //   // TODO: Spawn limit
+        // }
       })
       // console.log('whiteTachyons', Crafty('WhiteTachyon').length)
     },
-    spawner (gameEnd) {
-      this._gameEnd = gameEnd * Crafty.timer.FPS()
+    spawner (gameDuration) {
+      // this._gameEnd = gameEnd * Crafty.timer.FPS()
+      this._lastFrame = gameDuration * Crafty.timer.FPS()
       return this
     },
     reset () {
-      this._dt = 0
+      this._f = 0
+      this._spawnFrame = 0
       this.unbind('EnterFrame')
       return this
     },
