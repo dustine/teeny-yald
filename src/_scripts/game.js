@@ -4,7 +4,7 @@
 import $ from 'jquery'
 
 // FIXED: Don't keep debug on!
-var DEBUG = false
+const DEBUG = false
 
 // HACK: Homemade time formattation, oh my
 function formatTime (ms) {
@@ -13,7 +13,7 @@ function formatTime (ms) {
     return Math.floor(number)
   }
   // milliseconds
-  var result = ' s'
+  let result = ' s'
   result = (ms % 1000).toFixed(0) + result
   while (result.length < 5) {
     result = '0' + result
@@ -35,78 +35,20 @@ function formatTime (ms) {
 }
 
 $(() => {
-  var $container = $('.timeline')
-  var display = $('.timeline > .display')[0]
-  var hits = $('.timeline > .hits')[0]
-  var progress = $('.timeline > .progress')[0]
 
-  // TODO: make this a module
-  ;(function loadFrame ($container, display, hits, progress) {
-    (function addCorrectBorderRadiusToDigits () {
-      function addIntegerBorderRadius (length, i, elem) {
-        i = length - i - 1
-        if (i % 3 === 0) {
-          $(elem).addClass('-right')
-        }
-        if ((i + 1) % 3 === 0) {
-          $(elem).addClass('-left')
-        }
-      }
+  require('./game/outsideFrame')
 
-      $('.counter.-separate').each(function (i, elem) {
-        var $children = $(elem).children()
-        var $digits = $children.filter('.digit')
-        $digits.each(function (i, elem) {
-          addIntegerBorderRadius($digits.length, i, elem)
-        })
-      })
-    }())
-
-    // initialize canvas
-    console.log($container.parent(), $container.parent().height())
-
-    var CANVAS_WIDTH = $container.width()
-    var CANVAS_HEIGHT = $container.parent().height() * 0.8
-    $container.height(CANVAS_HEIGHT)
-
-    display.width = hits.width = progress.width = CANVAS_WIDTH
-    display.height = hits.height = progress.height = CANVAS_HEIGHT
-    var context = display.getContext('2d')
-
-    context.lineWidth = 1
-    context.lineCap = 'round'
-    context.strokeStyle = '#666'
-    var maxDivider = 32
-    for (var divider = 2; divider <= maxDivider; divider *= 2) {
-      for (var place = 1; place < divider; place++) {
-        context.beginPath()
-        context.moveTo(
-          Math.round(CANVAS_WIDTH / divider * place) + 0.5,
-          CANVAS_HEIGHT
-        )
-        var pointerLimit = Math.log(divider) /
-          Math.log(maxDivider * maxDivider)
-        context.lineTo(
-          Math.round(CANVAS_WIDTH / divider * place) + 0.5,
-          Math.round(CANVAS_HEIGHT * pointerLimit +
-            CANVAS_HEIGHT * 1 / 4)
-        )
-        context.stroke()
-      }
-    }
-  })($container, display, hits, progress)
-
-  // var $container = $('.timeline')
-  // var display = $('#tb-display')[0]
-  // var hits = $('#tb-hits')[0]
-  // var progress = $('#tb-progress')[0]
+  // let $container = $('.timeline')
+  // let display = $('.timeline > .display')[0]
+  let hits = $('.timeline > .hits')[0]
+  let progress = $('.timeline > .progress')[0]
 
   function updateTimebarHits (current, total, color) {
     color = color || 'red'
-    var context = hits.getContext('2d')
-    var x = Math.floor(hits.width * (current / total)) - 0.5
+    let context = hits.getContext('2d')
+    let x = Math.floor(hits.width * (current / total)) - 0.5
     context.beginPath()
-    var gradient = context.createLinearGradient(0, 0, 0, progress.height)
+    let gradient = context.createLinearGradient(0, 0, 0, progress.height)
     gradient.addColorStop(0, 'rgb(121, 0, 0)')
     gradient.addColorStop(0.5, color)
     gradient.addColorStop(1, 'rgb(121, 0, 0)')
@@ -120,26 +62,26 @@ $(() => {
   function updateTimebarProgress (current, total, color) {
     // update bar
     color = color || 'cyan'
-    var context = progress.getContext('2d')
+    let context = progress.getContext('2d')
     context.clearRect(0, 0, progress.width, progress.height)
-    var gradient = context.createLinearGradient(0, 0, 0, progress.height)
+    let gradient = context.createLinearGradient(0, 0, 0, progress.height)
     gradient.addColorStop(0, color)
     gradient.addColorStop(1, 'rgb(0, 199, 205)')
     // gradient.addColorStop(1, 'rgb(0, 159, 181)')
     context.fillStyle = gradient
-    var length = Math.min(progress.width * (current / total), progress.width)
+    let length = Math.min(progress.width * (current / total), progress.width)
     context.fillRect(0, 0, length, progress.height)
   }
 
   function resetTimebar () {
-    var context = progress.getContext('2d')
+    let context = progress.getContext('2d')
     context.clearRect(0, 0, progress.width, progress.height)
     context = hits.getContext('2d')
     context.clearRect(0, 0, hits.width, hits.height)
   }
 
   function updateLoopCounters (attempts) {
-    var digits = $('.loop-counter .digit')
+    let digits = $('.loop-counter .digit')
       .toArray()
     attempts = attempts.toString()
     for (; attempts.length < 4;) {
@@ -148,13 +90,13 @@ $(() => {
     if (attempts.length > 4) {
       attempts = '10k+'
     }
-    for (var l = 0; l < 4; ++l) {
+    for (let l = 0; l < 4; ++l) {
       digits[l].innerHTML = attempts[l]
     }
   }
 
   function updateScoreCounters (score) {
-    var digits = $('.score-display .digit')
+    let digits = $('.score-display .digit')
       .toArray()
     score = score.toFixed(0).toString()
     for (; score.length < digits.length;) {
@@ -163,7 +105,7 @@ $(() => {
     if (score.length > digits.length) {
       throw 'score too bong, ' + score
     }
-    for (var l = 0; l < digits.length; ++l) {
+    for (let l = 0; l < digits.length; ++l) {
       digits[l].innerHTML = score[l]
     }
   }
@@ -174,23 +116,24 @@ $(() => {
 
   // # CONSTANTS
   // global consts
-  var game = $('#animated-sansa')
-  var WIDTH = game.width()
-  var HEIGHT = game.height()
-  var BORDER = 50
-  var SPAWN_BORDER = 50
+  let game = $('#animated-sansa')
+  const WIDTH = game.width()
+  const HEIGHT = game.height()
+  const BORDER = 50
+  const SPAWN_BORDER = BORDER / 2
+  const DESPAWN_BORDER = BORDER
   // in seconds thanks to Crafty.timer.FPS()
-  var GAME_LENGTH = 60
+  const GAME_LENGTH = 60
 
   // player constants
-  var MAX_SPEED = 8
-  var PLAYER_RADIUS = 5
+  const MAX_SPEED = 8
+  const PLAYER_RADIUS = 5
 
   // tachyons constants
-  var TACHYON_SIZE = 4
+  const TACHYON_SIZE = 4
 
   // statistics
-  var runs = []
+  let runs = []
 
   function inGameState () {
     return !Crafty.isPaused() &&
@@ -205,15 +148,26 @@ $(() => {
     if (!inGameState()) {
       return
     }
+    // pause menu layout
     Crafty.e('2D, DOM, Text, PauseScreen')
       .attr({w: WIDTH, y: 40, z: 2100})
       .css('text-align', 'center')
       .text('Paused')
       .textColor('rgba(0, 0, 0, 0.5)')
       .textFont({family: 'Open Sans', size: '10em'})
-    Crafty.e('2D, DOM, Color, PauseScreen')
+    Crafty.e('2D, DOM, Color, PauseScreen, Mouse, Keyboard')
       .attr({x: 0, y: 0, w: WIDTH, h: HEIGHT, z: 2000})
       .color('rgba(128, 128, 128, 0.5)')
+      .bind('Click', function () {
+        Crafty.pause()
+      })
+      .bind('KeyDown', function () {
+        if (this.isDown('ENTER')) {
+          Crafty.pause()
+        } else if (this.isDown('ESC')) {
+          Crafty.pause()
+        }
+      })
     // forces to redraw the pause screen
     Crafty.trigger('RenderScene')
   })
@@ -224,31 +178,45 @@ $(() => {
     })
   })
 
+  Crafty.bind('KeyDown', function (keyEvent) {
+    if (keyEvent.key === Crafty.keys.P) {
+      if (!Crafty.isPaused()) Crafty.pause()
+    }
+  })
+
   Crafty.bind('NewScore', function (score) {
     updateScoreCounters(score)
   })
 
-  function newRun () {
+  function newRun (info) {
+    let score = (info && info.score) || player.score
     runs.push({
-      score: player.score,
-      // +1 as the clock is always one frame behind
-      time: Math.round((clock._dt + 1) * 1000 / Crafty.timer.FPS())
+      score: score,
+      // run times are saved in ms
+      time: Math.round(clock.time() * 1000)
     })
   }
 
-  Crafty.bind('Hit', function (score) {
-    newRun()
-    updateTimebarHits(clock._dt, clock._gameEnd)
+  Crafty.bind('PlayerScratch', function (info) {
+    newRun(info)
+    updateTimebarHits(clock.time(), GAME_LENGTH)
+    Crafty.trigger('EndLoop')
+    // ready the new ghost
+    if (info.previousFrames !== []) {
+      Crafty.e('Ghost')
+        .Ghost(info.tachId, info.firstFrame, info.previousFrames)
+    }
+
+    Crafty.scene('Scratch')
+  })
+
+  Crafty.bind('PlayerKill', function (info) {
+    newRun(info)
+    updateTimebarHits(clock.time(), GAME_LENGTH)
+    Crafty.scene('GameOver')
   })
 
   // # CUSTOM COMPONENTS
-  require('./game/player')(Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER)
-  require('./game/ghosts')(Crafty)
-  require('./game/tachyons')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
-    TACHYON_SIZE)
-  require('./game/spawner')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
-    TACHYON_SIZE)
-
   Crafty.c('Quark', {
     init: function () {
       this.requires('2D, DOM, Color, Collision')
@@ -268,42 +236,59 @@ $(() => {
     }
   })
 
+  require('./game/player')(Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER)
+  require('./game/ghosts')(Crafty)
+  require('./game/tachyons')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
+    DESPAWN_BORDER, TACHYON_SIZE)
+  require('./game/spawner')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
+    DESPAWN_BORDER, TACHYON_SIZE)
+
   Crafty.c('GameClock', {
-    _dt: 0,
-    _gameEnd: 0,
-    _dead: false,
+    _f: 0,
+    _lastFrame: 0,
+    // _dead: false,
     init: function () {
       this.requires('2D, Delay')
     },
-    destroy: function () {
-      this._dead = true
+    remove: function () {
+      // this._dead = true
       this.cancelDelay(this._winGame)
     },
     _enterFrame: function (frame) {
-      if (this._dead) {
-        return
-      }
-      updateTimebarProgress(this._dt, this._gameEnd)
+      // if (this._dead) {
+      //   return
+      // }
+      updateTimebarProgress(this._f, this._lastFrame)
       // this._dt += frame.dt
       // update the game frame-wise
-      this._dt++
+      this._f++
     },
     _winGame: function () {
       Crafty.scene('GameWon')
     },
-    gameClock: function (gameEnd) {
-      this._gameEnd = gameEnd * Crafty.timer.FPS()
+    gameClock: function (gameDuration) {
+      this._lastFrame = gameDuration * Crafty.timer.FPS()
       this.bind('EnterFrame', this._enterFrame)
-      this.delay(this._winGame, gameEnd * 1000)
+      this.delay(this._winGame, gameDuration * 1000)
       return this
     },
+    time: function () {
+      // +1 as the clock is always one frame behind
+      // FIXME: That's a lie, but not sure how often
+      return (this._f + 1) / Crafty.timer.FPS()
+    },
+    total: function () {
+      return this._lastFrame / Crafty.timer.FPS()
+    },
     reset: function () {
-      this._dt = 0
+      this._f = 0
       return this
     }
   })
 
-  var player
+  let player
+  let clock
+  let spawner
 
   // FIXME: Mouse lock is just too broken to work
   // // mouse lock mechanism
@@ -314,7 +299,7 @@ $(() => {
   //   this.requestPointerLock()
   // })
   //
-  // var lockOnce = true
+  // let lockOnce = true
   // function lockChange () {
   //   if (document.pointerLockElement === Crafty.stage.elem) {
   //     // enable mouse control, delayed to prevent sudden jump from
@@ -342,9 +327,74 @@ $(() => {
   // TODO(Dustine): Scenes
   Crafty.background('black')
 
-  var loops = 1
-  var clock
-  var spawner
+  // GUI
+
+  Crafty.c('gui-button', {
+    init () {
+      this.requires('2D, DOM, Mouse, Keyboard')
+      this.bind('Change', this._change)
+      this.attr({
+        selected: false,
+        colorFrom: 'blue',
+        colorTo: 'darkBlue',
+        w: 400,
+        h: 100,
+        action: function () {}
+      })
+      console.log(this.colorTo)
+
+      this.bind('Click', this._action)
+      this.bind('KeyDown', this._keyDown)
+      this._text = Crafty.e('2D, DOM, Text, gui-button-text')
+        .text('Hello')
+        .textColor('#ffffff')
+        .textFont({'family': 'Open Sans', size: '4em'})
+        .bind('Change', function (changed){
+
+        })
+      this.attach(this._text)
+    },
+    _action () {
+      this.action.call(this)
+    },
+    _change (changed) {
+      console.log(changed, changed.keys)
+      // TODO: Be wary of 'falsy' values
+      if (changed.hasOwnProperty('colorFrom') ||
+        changed.hasOwnProperty('colorTo')) {
+        this._setColors(changed.colorFrom, changed.colorTo)
+      }
+      // if(changed.hasOwnProperty('colorFrom'))
+    },
+    _keyDown (keyEvent) {
+      if (keyEvent.key === Crafty.keys.ENTER && this.selected) {
+        this._action()
+      }
+    },
+    _setColors (colorFrom, colorTo) {
+      colorFrom = colorFrom || this.colorFrom || 'grey'
+      colorTo = colorTo || this.colorTo || 'black'
+      this.css({
+        'background': `linear-gradient(to bottom, ${colorFrom} 0%, ${colorTo} 100%)`
+      })
+    },
+    click () {},
+    select () {
+      this.toggleComponent('selected')
+      this.selected = !this.selected
+      return this
+    },
+    text (text) {
+      this._text.text(text)
+      return this
+    },
+    textSize (size) {
+      this._text.textFont('size', size)
+      return this
+    }
+  })
+
+  let loops = 1
 
   Crafty.scene('Menu', function () {
     Crafty.e('2D, DOM, Text')
@@ -359,26 +409,18 @@ $(() => {
     //   .textFont({'family': 'Open Sans', size:'3em'})
     //   .attr({w: WIDTH, y:240})
     //   .css('text-align', 'center')
-    Crafty.e('2D, DOM, Mouse, Keyboard, Text')
-      .attr({x: (WIDTH - 400) / 2, y: (HEIGHT - 100) / 2 + 100, w: 400, h: 100})
-      // TODO: Move this to the CSS (hint: Components == Classes)
-      .css({
-        'background': 'linear-gradient(to bottom, rgb(84, 193, 188) 0%, rgb(19, 154, 150) 100%)',
-        'border-radius': '0.5em'
-      })
-      .bind('Click', function () {
-        Crafty.scene('Start')
-      })
-      .bind('KeyDown', function () {
-        if (this.isDown('ENTER')) {
+    Crafty.e('gui-button')
+      .text('Start')
+      .attr({
+        x: (WIDTH - 400) / 2,
+        y: (HEIGHT - 100) / 2 + 100,
+        colorFrom: 'rgb(84, 193, 188)',
+        colorTo: 'rgb(19, 154, 150)',
+        action: () => {
           Crafty.scene('Start')
         }
       })
-      .text('Start')
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '4em'})
-      .css('text-align', 'center')
-      .css('line-height', '' + 100 + 'px')
+      .select()
   })
 
   Crafty.scene('Start', function () {
@@ -409,29 +451,6 @@ $(() => {
     Crafty.trigger('StartLoop')
     // AAND start the spawn nonsence
     spawner.start()
-  }, function () {
-    // mark the hit
-    // TODO Prevent access to internal variables
-    // updateTimebarProgress(clock._dt, clock._gameEnd)
-    clock.destroy()
-    // updateTimebarHits(clock._dt, clock._gameEnd)
-    // clock.reset()
-    // stop the spawner
-    spawner.reset()
-    // save current run's values
-    var firstFrame = player._firstFrame || 0
-    var previousFrames = player._previousFrames || []
-    // reset player
-    player._previousFrames = []
-    var tachId = player._tachId
-    player._tachId = undefined
-    // restart old ghosts
-    Crafty.trigger('EndLoop')
-    // ready the new ghost
-    if (previousFrames.length !== 0) {
-      Crafty.e('Ghost')
-        .Ghost(tachId, firstFrame, previousFrames)
-    }
   })
 
   Crafty.scene('Scratch', function () {
@@ -444,6 +463,34 @@ $(() => {
       }, 2000)
   })
 
+  function gameOverText () {
+    // latest score
+    let latest = runs[runs.length - 1]
+    let score = 'Score: ' + latest.score.toFixed(0) + ', over ' +
+      formatTime(latest.time)
+    // best score and time (all around)
+    let bestScore = runs[0]
+    bestScore.i = 0
+    let bestTime = runs[0]
+    bestTime.i = 0
+    for (let i = 0; i < runs.length; i++) {
+      if (runs[i].score > bestScore.score) {
+        bestScore = runs[i]
+        bestScore.i = i
+      }
+      if (runs[i].time > bestTime.time) {
+        bestTime = runs[i]
+        bestTime.i = i
+      }
+    }
+    bestScore = 'Best Score: Attempt ' + (bestScore.i + 1) + ', ' +
+      bestScore.score.toFixed(0)
+    bestTime = 'Best Time: Attempt ' + (bestTime.i + 1) + ', ' +
+      formatTime(bestTime.time)
+
+    return {score, bestScore, bestTime}
+  }
+
   // TODO: Join the common logic between GameOver and GameWon
   Crafty.scene('GameOver', function () {
     // cleanup
@@ -452,6 +499,7 @@ $(() => {
     })
     spawner.destroy()
     // show gameover screen
+    let scores = gameOverText()
     Crafty.e('2D, DOM, Text')
       .text('Game Over')
       .textColor('#ffffff')
@@ -459,60 +507,44 @@ $(() => {
       .attr({w: WIDTH, y: 40})
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
-      .text(function () {
-        var latest = runs[runs.length - 1]
-        return 'Score: ' + latest.score.toFixed(0) + ', over ' +
-          formatTime(latest.time)
-      })
+      .text(scores.score)
       .textColor('#ffffff')
       .textFont({'family': 'Open Sans', size: '3em'})
       .attr({w: WIDTH, y: 240})
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
-      .text(function () {
-        var bestScore = runs[0]
-        bestScore.i = 0
-        var bestTime = runs[0]
-        bestTime.i = 0
-        for (var i = 0; i < runs.length; i++) {
-          if (runs[i].score > bestScore.score) {
-            bestScore = runs[i]
-            bestScore.i = i
-          }
-          if (runs[i].time > bestTime.time) {
-            bestTime = runs[i]
-            bestTime.i = i
-          }
-        }
-        return 'Best Score: Attempt ' + (bestScore.i + 1) + ', ' +
-          bestScore.score.toFixed(0) + '<br>' +
-          'Best Time: Attempt ' + (bestTime.i + 1) + ', ' +
-          formatTime(bestTime.time)
-      })
+      .text(scores.bestScore + '<br>' + scores.bestTime)
       .textColor('#ffffff')
       .textFont({'family': 'Open Sans', size: '1.5em'})
       .attr({w: WIDTH, y: 300})
       .css('text-align', 'center')
-    Crafty.e('2D, DOM, Mouse, Keyboard, Text')
-      .attr({x: (WIDTH - 400) / 2, y: (HEIGHT - 100) / 2 + 200, w: 400, h: 100})
-      // TODO: Move this to the CSS (hint: Components == Classes)
-      .css({
-        'background': 'linear-gradient(to bottom, blue 0%, darkBlue 100%)',
-        'border-radius': '0.5em'
-      })
-      .bind('Click', function () {
-        Crafty.scene('Start')
-      })
-      .bind('KeyDown', function () {
-        if (this.isDown('ENTER')) {
+
+    // Crafty.e('gui-button')
+    //   .text('Watch Replay')
+    //   .textSize('size', '1em')
+    //   .attr({
+    //     x: (WIDTH - 400) / 2,
+    //     y: (HEIGHT - 20) / 2 + 150,
+    //     w: 200,
+    //     h: 50,
+    //     colorFrom: 'darkRed',
+    //     colorTo: '#5d0000',
+    //     action: function () {
+    //       this.text('Not implemented yet, sorry!')
+    //     }
+    //   })
+    Crafty.e('gui-button')
+      .text('Restart')
+      .attr({
+        x: (WIDTH - 400) / 2,
+        y: (HEIGHT - 100) / 2 + 225,
+        colorFrom: 'darkRed',
+        colorTo: '#5d0000',
+        action: () => {
           Crafty.scene('Start')
         }
       })
-      .text('Restart')
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '4em'})
-      .css('text-align', 'center')
-      .css('line-height', '' + 100 + 'px')
+      .select()
   })
 
   Crafty.scene('GameWon', function () {
@@ -525,67 +557,38 @@ $(() => {
     spawner.destroy()
     updateTimebarProgress(1, 1)
     // show gamewon screen
+    let scores = gameOverText()
     Crafty.e('2D, DOM, Text')
-      .text('You win!')
+      .text('You Win!')
       .textColor('#ffffff')
       .textFont({'family': 'Open Sans', size: '10em'})
       .attr({w: WIDTH, y: 40})
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
-      .text(function () {
-        var latest = runs[runs.length - 1]
-        return 'Score: ' + latest.score.toFixed(0) + ', over ' +
-          formatTime(latest.time)
-      })
+      .text(scores.score)
       .textColor('#ffffff')
       .textFont({'family': 'Open Sans', size: '3em'})
       .attr({w: WIDTH, y: 240})
       .css('text-align', 'center')
     Crafty.e('2D, DOM, Text')
-      .text(function () {
-        var bestScore = runs[0]
-        bestScore.i = 0
-        var bestTime = runs[0]
-        bestTime.i = 0
-        for (var i = 0; i < runs.length; i++) {
-          if (runs[i].score > bestScore.score) {
-            bestScore = runs[i]
-            bestScore.i = i
-          }
-          if (runs[i].time > bestTime.time) {
-            bestTime = runs[i]
-            bestTime.i = i
-          }
-        }
-        return 'Best Score: Attempt ' + (bestScore.i + 1) + ', ' +
-          bestScore.score.toFixed(0) + '<br>' +
-          'Best Time: Attempt ' + (bestTime.i + 1) + ', ' +
-          formatTime(bestTime.time)
-      })
+      .text(scores.bestScore + '<br>' + scores.bestTime)
       .textColor('#ffffff')
       .textFont({'family': 'Open Sans', size: '1.5em'})
       .attr({w: WIDTH, y: 300})
       .css('text-align', 'center')
-    Crafty.e('2D, DOM, Mouse, Keyboard, Text')
-      .attr({x: (WIDTH - 400) / 2, y: (HEIGHT - 100) / 2 + 200, w: 400, h: 100})
-      // TODO: Move this to the CSS (hint: Components == Classes)
-      .css({
-        'background': 'linear-gradient(to bottom, skyBlue 0%, cyan 100%)',
-        'border-radius': '0.5em'
-      })
-      .bind('Click', function () {
-        Crafty.scene('Start')
-      })
-      .bind('KeyDown', function () {
-        if (this.isDown('ENTER')) {
+
+    Crafty.e('gui-button')
+      .text('Restart')
+      .attr({
+        x: (WIDTH - 400) / 2,
+        y: (HEIGHT - 100) / 2 + 150,
+        colorFrom: 'rgb(84, 193, 188)',
+        colorTo: 'rgb(19, 154, 150)',
+        action: () => {
           Crafty.scene('Start')
         }
       })
-      .text('Restart')
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '4em'})
-      .css('text-align', 'center')
-      .css('line-height', '' + 100 + 'px')
+      .select()
   })
 
   // # DEBUG

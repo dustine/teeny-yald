@@ -7,14 +7,14 @@ import gulpLoadPlugins from 'gulp-load-plugins'
 import browserSyncLib from 'browser-sync'
 import pjson from './package.json'
 import minimist from 'minimist'
-import runSequence from 'run-sequence'
+// import runSequence from 'run-sequence'
 import pngquant from 'imagemin-pngquant'
 import del from 'del'
 import autoprefixer from 'autoprefixer-core'
 import vsource from 'vinyl-source-stream'
 import buffer from 'vinyl-buffer'
-import es from 'event-stream'
-import glob from 'glob'
+// import es from 'event-stream'
+// import glob from 'glob'
 import browserify from 'browserify'
 import gulpif from 'gulp-if'
 import jade from 'jade'
@@ -165,8 +165,8 @@ gulp.task('browserify', () => {
       .pipe(vsource(path.basename(filepath)))
       .pipe(buffer())
       .pipe(plugins.sourcemaps.init({loadMaps: true}))
-        .pipe(gulpif(production, plugins.uglify()))
-        .on('error', plugins.util.log)
+      .pipe(gulpif(production, plugins.uglify()))
+      .on('error', plugins.util.log)
       .pipe(plugins.sourcemaps.write('./'))
       .pipe(gulp.dest(dest))
       .pipe(browserSync.stream())
