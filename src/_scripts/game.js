@@ -3,10 +3,10 @@
 
 import $ from 'jquery'
 
-// FIXED: Don't keep debug on!
+// FIXME: Don't keep debug on!
 const DEBUG = false
 
-// HACK: Homemade time formattation, oh my
+// XXX: Get a library for this, for pete's sake
 function formatTime (ms) {
   function cut (number, fraction) {
     number /= fraction
@@ -35,7 +35,6 @@ function formatTime (ms) {
 }
 
 $(() => {
-
   require('./game/outsideFrame')
 
   // let $container = $('.timeline')
@@ -116,14 +115,17 @@ $(() => {
 
   // # CONSTANTS
   // global consts
-  let game = $('#animated-sansa')
+  let game = $('#teeny-yald')
+  // game dimensions
   const WIDTH = game.width()
   const HEIGHT = game.height()
   const BORDER = 50
   const SPAWN_BORDER = BORDER / 2
   const DESPAWN_BORDER = BORDER
+  // game timings
   // in seconds thanks to Crafty.timer.FPS()
   const GAME_LENGTH = 60
+  const SCRATCH_LENGTH = 2
 
   // player constants
   const MAX_SPEED = 8
@@ -132,6 +134,8 @@ $(() => {
   // tachyons constants
   const TACHYON_SIZE = 4
 
+  const CONSTS = {WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_BORDER,
+    GAME_LENGTH, SCRATCH_LENGTH, MAX_SPEED, PLAYER_RADIUS, TACHYON_SIZE}
   // statistics
   let runs = []
 
@@ -140,7 +144,7 @@ $(() => {
       ['Scratch', 'Loop'].indexOf(Crafty._current) !== -1
   }
 
-  Crafty.init(WIDTH, HEIGHT, 'animated-sansa')
+  Crafty.init(WIDTH, HEIGHT, 'teeny-yald')
 
   Crafty.settings.modify('autoPause', true)
 
@@ -198,16 +202,30 @@ $(() => {
   }
 
   Crafty.bind('PlayerScratch', function (info) {
-    newRun(info)
     updateTimebarHits(clock.time(), GAME_LENGTH)
-    Crafty.trigger('EndLoop')
     // ready the new ghost
-    if (info.previousFrames !== []) {
+    if (info.frames !== []) {
       Crafty.e('Ghost')
-        .Ghost(info.tachId, info.firstFrame, info.previousFrames)
+        .Ghost(info.tachId, info.frames, info.score)
     }
-
-    Crafty.scene('Scratch')
+    // player caused a paradox
+    if (spawner.killers.indexOf(info.tachId) >= 0) {
+      let doubleDead
+      Crafty('Active').each(function () {
+        if (this.tachId === info.tachId) {
+          doubleDead = this
+        }
+      })
+      player.regenerate(info, doubleDead)
+      doubleDead.destroy()
+    } else {
+      newRun(info)
+      Crafty.trigger('EndLoop')
+      // save tachId in spawner
+      spawner.killers.push(info.tachId)
+      // TODO: Fix paradoxes (runs and hitcounter)
+      Crafty.scene('Scratch')
+    }
   })
 
   Crafty.bind('PlayerKill', function (info) {
@@ -231,43 +249,36 @@ $(() => {
       this.collision(
         /* eslint-disable new-cap */
         new Crafty.circle(PLAYER_RADIUS, PLAYER_RADIUS, PLAYER_RADIUS)
-      /* eslint-enable new-cap */
+        /* eslint-enable new-cap */
       )
     }
   })
 
-  require('./game/player')(Crafty, WIDTH, HEIGHT, MAX_SPEED, BORDER)
-  require('./game/ghosts')(Crafty)
-  require('./game/tachyons')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
-    DESPAWN_BORDER, TACHYON_SIZE)
-  require('./game/spawner')(Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER,
-    DESPAWN_BORDER, TACHYON_SIZE)
+  require('./game/player')(Crafty, CONSTS)
+  require('./game/ghosts')(Crafty, CONSTS)
+  require('./game/tachyons')(Crafty, CONSTS)
+  require('./game/spawner')(Crafty, CONSTS)
 
   Crafty.c('GameClock', {
-    _f: 0,
-    _lastFrame: 0,
-    // _dead: false,
+    frame: 0,
+    lastFrame: 0,
     init: function () {
       this.requires('2D, Delay')
     },
     remove: function () {
-      // this._dead = true
       this.cancelDelay(this._winGame)
     },
     _enterFrame: function (frame) {
-      // if (this._dead) {
-      //   return
-      // }
-      updateTimebarProgress(this._f, this._lastFrame)
-      // this._dt += frame.dt
+      updateTimebarProgress(this.frame, this.lastFrame)
+      // this.dt += frame.dt
       // update the game frame-wise
-      this._f++
+      this.frame++
     },
     _winGame: function () {
       Crafty.scene('GameWon')
     },
     gameClock: function (gameDuration) {
-      this._lastFrame = gameDuration * Crafty.timer.FPS()
+      this.lastFrame = gameDuration * Crafty.timer.FPS()
       this.bind('EnterFrame', this._enterFrame)
       this.delay(this._winGame, gameDuration * 1000)
       return this
@@ -275,13 +286,13 @@ $(() => {
     time: function () {
       // +1 as the clock is always one frame behind
       // FIXME: That's a lie, but not sure how often
-      return (this._f + 1) / Crafty.timer.FPS()
+      return (this.frame + 1) / Crafty.timer.FPS()
     },
     total: function () {
-      return this._lastFrame / Crafty.timer.FPS()
+      return this.lastFrame / Crafty.timer.FPS()
     },
     reset: function () {
-      this._f = 0
+      this.frame = 0
       return this
     }
   })
@@ -341,7 +352,6 @@ $(() => {
         h: 100,
         action: function () {}
       })
-      console.log(this.colorTo)
 
       this.bind('Click', this._action)
       this.bind('KeyDown', this._keyDown)
@@ -349,7 +359,7 @@ $(() => {
         .text('Hello')
         .textColor('#ffffff')
         .textFont({'family': 'Open Sans', size: '4em'})
-        .bind('Change', function (changed){
+        .bind('Change', function (changed) {
 
         })
       this.attach(this._text)
@@ -358,8 +368,7 @@ $(() => {
       this.action.call(this)
     },
     _change (changed) {
-      console.log(changed, changed.keys)
-      // TODO: Be wary of 'falsy' values
+      // console.log(changed, changed.keys)
       if (changed.hasOwnProperty('colorFrom') ||
         changed.hasOwnProperty('colorTo')) {
         this._setColors(changed.colorFrom, changed.colorTo)
@@ -398,7 +407,7 @@ $(() => {
 
   Crafty.scene('Menu', function () {
     Crafty.e('2D, DOM, Text')
-      .text('Animated Sansa')
+      .text('Teeny Yald')
       .textColor('#ffffff')
       .textFont({'family': 'Open Sans', size: '6em'})
       .attr({w: WIDTH, y: 40})
@@ -433,24 +442,54 @@ $(() => {
     player = Crafty.e('Player')
     Crafty.scene('Scratch')
   }, function () {
+    // # DEBUG
+    // Debug commands
+    if (DEBUG) {
+      // Crafty('Quark').each(function () {
+      //   this.addComponent('WiredHitBox')
+      // })
+      // player.addComponent('WiredHitBox')
+      // player.addComponent('Keyboard')
+      // player.bind('KeyDown', function (ke) {
+      //   if (ke.key === Crafty.keys.R) {
+      //     this.x = WIDTH / 2 - PLAYER_RADIUS
+      //     this.y = HEIGHT / 2 - PLAYER_RADIUS
+      //   } else if (ke.key === Crafty.keys.Q) {
+      //     console.log(this.x, this.y)
+      //   } else if (ke.key === Crafty.keys.C) {
+      //     // if (Crafty._current === 'Loop') {
+      //     //   Crafty.scene('Scratch')
+      //     // }
+      //     // player.toggleComponent('Paradoxy')
+      //   }
+      // })
+      Crafty.e('Tachyon')
+        .type('White')
+        .whiteTachyon({
+          id: 0,
+          speed: 4,
+          angle: Math.random() * Math.PI * 2 - Math.PI,
+          origin: {x: WIDTH * 3 / 4, y: HEIGHT * 3 / 4}
+        })
+        .addComponent('Paradoxy')
+    }
     spawner = Crafty.e('Spawner')
-      // TODO: Make this a global constant
       .spawner(GAME_LENGTH)
   })
 
   Crafty.scene('Loop', function () {
+    // start the game clock
+    clock = Crafty.e('GameClock')
+      .gameClock(GAME_LENGTH)
+
     if (DEBUG) {
       Crafty('Quark').each(function () {
         this.addComponent('WiredHitBox')
       })
     }
-    // start the game clock
-    clock = Crafty.e('GameClock')
-      .gameClock(GAME_LENGTH)
-    // and play everyone else's recording
     Crafty.trigger('StartLoop')
-    // AAND start the spawn nonsence
-    spawner.start()
+  }, function () {
+    Crafty.trigger('EndLoop')
   })
 
   Crafty.scene('Scratch', function () {
@@ -458,9 +497,8 @@ $(() => {
     // set timeout for restart of ghosties
     Crafty.e('Delay')
       .delay(function () {
-        // TODO: wait for the first frame available ?
         Crafty.scene('Loop')
-      }, 2000)
+      }, SCRATCH_LENGTH * 1000)
   })
 
   function gameOverText () {
@@ -590,28 +628,6 @@ $(() => {
       })
       .select()
   })
-
-  // # DEBUG
-  // Debug commands
-  if (DEBUG) {
-    Crafty('Quark').each(function () {
-      this.addComponent('WiredHitBox')
-    })
-    // player.addComponent('WiredHitBox')
-    player.addComponent('Keyboard')
-    player.bind('KeyDown', function (ke) {
-      if (ke.key === Crafty.keys.R) {
-        this.x = WIDTH / 2 - PLAYER_RADIUS
-        this.y = HEIGHT / 2 - PLAYER_RADIUS
-      } else if (ke.key === Crafty.keys.Q) {
-        console.log(this.x, this.y)
-      } else if (ke.key === Crafty.keys.C) {
-        if (Crafty._current === 'Loop') {
-          Crafty.scene('Scratch')
-        }
-      }
-    })
-  }
 
   // Start the game proper!
   Crafty.scene('Menu')

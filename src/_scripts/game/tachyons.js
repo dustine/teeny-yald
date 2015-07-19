@@ -1,4 +1,6 @@
-module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_BORDER, SIZE) {
+module.exports = function (Crafty,
+  {WIDTH: WIDTH, HEIGHT: HEIGHT, BORDER: BORDER, SPAWN_BORDER: SPAWN_BORDER,
+    DESPAWN_BORDER: DESPAWN_BORDER, TACHYON_SIZE: SIZE}) {
   const FADE_TIME = 2000
 
   Crafty.c('Tachyon', {
@@ -19,7 +21,6 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
       this.type = type
       // Crafty('Spawner').get(0).count[this.type]++
       this.color(type)
-      // TODO: Make fade-in(/out) time a constant
       this.tween({alpha: 1}, FADE_TIME)
       this.addComponent(type + 'Tachyon')
       return this
@@ -110,7 +111,44 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
     }
   })
 
-  // TODO: Get the common code between moving tachyons into a separate component
+  Crafty.c('Paradoxy', {
+    init () {
+      // console.log(this._speed, this._angle * 180 / Math.PI)
+      let angle = Math.PI - (this._angle + Math.PI * 3 / 2)
+      this.requires('Particles')
+      this.particles({
+        maxParticles: 100,
+        size: SIZE * 4,
+        sizeRandom: SIZE,
+        speed: this._speed / 2,
+        speedRandom: 1.2,
+        // Lifespan in frames
+        lifeSpan: 29,
+        lifeSpanRandom: 7,
+        // Angle is calculated clockwise: 12pm is 0deg, 3pm is 90deg etc.
+        angle: angle * 180 / Math.PI || 0,
+        angleRandom: 0,
+        startColour: [128, 128, 128, 0.5],
+        startColourRandom: [128, 128, 128, 0],
+        endColour: [128, 128, 128, 0],
+        endColourRandom: [64, 64, 64, 0],
+        // Only applies when fastMode is off, specifies how sharp the gradients are drawn
+        sharpness: 20,
+        sharpnessRandom: 10,
+        // Random spread from origin
+        spread: 10,
+        // How many frames should this last
+        duration: -1,
+        // Will draw squares instead of circle gradients
+        fastMode: false,
+        gravity: { x: 0, y: 0 },
+        // sensible values are 0-3
+        jitter: 0
+      })
+    }
+  })
+
+  // TODO: Get more common code between moving tachyons into a separate component
   Crafty.c('CyanTachyon', {
     _angle: 0,
     _speed: 0,

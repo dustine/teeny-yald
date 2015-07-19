@@ -12,12 +12,9 @@ $metal: linear-gradient(to bottom, $metal-0 0%, $metal-1 21%, $metal-2 49%, $met
 
 // game styles
 .game-container {
-  // TODO: Uncomment this to prevent (most) selection events
-
   background: $metal-0;
   border-radius: .5rem;
   box-shadow: 0 0 1.2em .4em $blue-glow;
-  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
   left: 50%;
   margin-right: -50%;
   pointer-events: none;
