@@ -1,5 +1,3 @@
-/* eslint */
-
 import fs from 'fs'
 import path from 'path'
 import gulp from 'gulp'
@@ -82,7 +80,7 @@ gulp.task('jade', () => {
     path.join(__dirname, dirs.source, '**/*.jade'),
     '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}')
   ])
-  // .pipe(plugins.changed(dest))
+  .pipe(plugins.changed(dest))
   .pipe(plugins.jade({
     jade: jade,
     locals: {
@@ -201,8 +199,23 @@ gulp.task('clean', del.bind(null, [
   path.join(__dirname, dirs.destination)
 ]))
 
+// bootstrap
+gulp.task('bootstrap', () => {
+  let dest = path.join(__dirname, taskTarget)
+  let bootstrap = path.join(__dirname, 'node_modules', 'bootstrap-sass', 'assets')
+  return gulp.src([
+      // bootstrap fonts
+      path.join(bootstrap, '**/*'),
+      '!' + path.join(bootstrap, 'images'),
+      '!' + path.join(bootstrap, 'javascripts'),
+      '!' + path.join(bootstrap, 'stylesheets')
+    ])
+    .pipe(plugins.changed(dest))
+    .pipe(gulp.dest(dest))
+})
+
 // Serve
-gulp.task('copy', () => {
+gulp.task('copy', ['bootstrap'], () => {
   let dest = path.join(__dirname, taskTarget)
   return gulp.src([
       path.join(__dirname, dirs.source, '**/*'),

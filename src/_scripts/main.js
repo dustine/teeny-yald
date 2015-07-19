@@ -3,7 +3,7 @@
 
 'use strict'
 
-import $ from 'jquery'
+import bootstrap from 'bootstrap-sass'
 
 $(() => {
   console.log('Welcome to Yeogurt!')
