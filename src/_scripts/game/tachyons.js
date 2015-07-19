@@ -1,3 +1,5 @@
+'use strict'
+
 module.exports = function (Crafty,
   {WIDTH: WIDTH, HEIGHT: HEIGHT, BORDER: BORDER, SPAWN_BORDER: SPAWN_BORDER,
     DESPAWN_BORDER: DESPAWN_BORDER, TACHYON_SIZE: SIZE}) {

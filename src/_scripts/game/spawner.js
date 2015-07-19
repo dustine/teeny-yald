@@ -1,3 +1,5 @@
+'use strict'
+
 // XXX: Get a library for this kind of stuff mkay
 // Fisher-Yates
 function shuffle (array) {
