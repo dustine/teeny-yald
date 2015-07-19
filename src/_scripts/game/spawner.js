@@ -1,4 +1,4 @@
-// TODO: Get a library for this kind of stuff mkay
+// XXX: Get a library for this kind of stuff mkay
 // Fisher-Yates
 function shuffle (array) {
   var m = array.length
@@ -36,7 +36,9 @@ function angleBetween (origin, dest) {
 //   }
 // }
 
-module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_BORDER) {
+module.exports = function (Crafty,
+  {WIDTH: WIDTH, HEIGHT: HEIGHT, BORDER: BORDER, SPAWN_BORDER: SPAWN_BORDER,
+    DESPAWN_BORDER: DESPAWN_BORDER}) {
   const FPS = Crafty.timer.FPS()
   let types = ['White']
   let specials = ['Cyan']
@@ -49,6 +51,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
     init () {
       this._spawnFrame = 0
       this._frames = []
+      this.killers = []
       this.count = {
         'White': 0,
         'Cyan': 0
@@ -58,9 +61,8 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
         'Cyan': 3,
         'Debug': 1000
       }
-      this.bind('EndLoop', function () {
-        this.reset()
-      })
+      this.bind('StartLoop', this.start)
+      this.bind('EndLoop', this.reset)
       this._whiteId = 0
     // this.requires('2D, Persist')
     },
@@ -73,7 +75,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
       // console.log(this.count)
     },
     _generate () {
-      // TODO: Regulate the Tachyon spawning to worsen as the game goes on
+      // TODO: Balance Tachyon spawning
       // TODO: More kinds of Tachyons
       let spawner = this
       let progression = this._f / this._lastFrame
@@ -83,7 +85,6 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
       }
 
       function createWhiteTachyons () {
-        // TODO: Move it upscope so we can add more tests to it
         // check if a type can spawn with the available components
         function canSpawn (type) {
           if (spawner.count[type] >= spawner.limit[type]) return false
@@ -111,8 +112,6 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
         // fill the spawn thing with the info
         let spawns = []
         types.forEach(function (type) {
-          // TODO: Take game duration and Tach type into consideration
-
           let randomMax = typeWiseRandomMax(type)
           for (let i = 0; i < randomMax; i++) {
             if (!canSpawn(type)) break
@@ -320,7 +319,7 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
         if (special) {
           switch (special.type) {
             case 'Cyan':
-              return spawner.count.Cyan < spawner.limit.Cyan
+              return spawner.count[special.type] < spawner.limit[special.type]
           }
           return false
         }
@@ -361,18 +360,24 @@ module.exports = function (Crafty, WIDTH, HEIGHT, BORDER, SPAWN_BORDER, DESPAWN_
       return spawns
     },
     _spawn (frame) {
-      // var _this = this
+      let spawner = this
+
+      function addTypeSpawnLogic (elem) {
+        switch (elem.type) {
+          case 'White':
+            // paradox-inducing
+            if (spawner.killers.indexOf(elem.id) >= 0) {
+              elem.addComponent('Paradoxy')
+            }
+        }
+      }
+
       frame.forEach(function (elem) {
-        // TODO: Add more Tachyon types here too
-        // console.log(elem)
-        // if (_this.count[elem.type] < _this.limit[elem.type]) {
         let tachyon = Crafty.e('Tachyon')
           .type(elem.type)
         let constructor = elem.type.toLowerCase() + 'Tachyon'
         tachyon[constructor](elem)
-        // } else {
-        //   // TODO: Spawn limit
-        // }
+        addTypeSpawnLogic(tachyon)
       })
       // console.log('whiteTachyons', Crafty('WhiteTachyon').length)
     },
