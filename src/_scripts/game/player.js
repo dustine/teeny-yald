@@ -1,3 +1,5 @@
+'use strict'
+
 function scale (val, from, to) {
   return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
 }

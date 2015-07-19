@@ -1,4 +1,5 @@
 /* eslint-env node */
+'use strict'
 
 module.exports = function (Crafty, {SCRATCH_LENGTH: SCRATCH_LENGTH}) {
   Crafty.c('Ghost', {
