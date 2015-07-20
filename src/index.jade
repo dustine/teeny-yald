@@ -1,11 +1,111 @@
 extends _layouts/base
 
-block append content
-  .container
-    .yeogurt-info
-      h1 Welcome to Yeogurt!
-      p Take a look at the <a href="https://github.com/larsonjj/generator-yeogurt#yeogurt-generator---">documentation</a> and start mixing up something awesome.
-      p
-        img.logo(src = config.baseUrl + "/images/yeogurt-swirl.png", width="75px")
+block append stylesheets
+  link(rel="stylesheet", href= config.baseUrl + "styles/main.css")
 
-  //- code.version v1.0.0
+block content
+  .container
+    .page-header
+      h1 Teeny Yald
+      p.slogan.text-info You always live twice, after all 
+      
+    .jumbotron
+      h2 What are you waiting for?
+      p.text-warning Requires Javascript and at least a 1,280 × 720 display
+      p
+        a.btn.btn-large.btn-primary(href= config.baseUrl + "game") 
+          | Play the game
+    
+  .game-info.container
+    .row
+      .col-md-12
+        .introduction
+          h2 Welcome to the hyjinks of time! 
+          p
+            | This game is a <strong>score run</strong> where you, the player, try to survive just long enough without getting hit by the other particles on screen. 
+          p
+            | All is not lost when you get hit (most of the time), however this may give you more than you bargained for...
+        
+      .media.col-md-12
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h3.media-heading
+            | You play as this cutie-pie! 
+          p
+            | You can control them with <kbd>WASD</kbd> or the arrow keys.
+          p
+            | Poor thing started existence mere instances before you spotted him, and he"s already in trouble! You see, they"re not alone in this ravage world.... 
+            
+      .media.col-md-12
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h3.media-heading
+            | These are the (Good) bad guys!
+          p
+            | They go by Tachyon, of the white flavour! They"re the normal grunt, but also the most special of them all, as they"re uniquely <span class="energized">energized</span>. When you get near them, you absorve their energy into your score. So being close to them is rather nice!
+          p
+            | Just not too close or else....
+                  
+      .media.col-md-12
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h3.media-heading
+            | Time travel is a thing here.
+          p
+            | Just one touch and poof! You go back to the start of the game, devoid of any score and progress. Or so it seems.
+          p
+            | Near you is a copy of your past actions, repeating each and every move you took before. We think this is all because of that <span class="energized">fancy energy</span> the white dudes have, and that hitting them unleashes it all in a quick blast.
+          p
+            | Oh, and don"t touch your past self. It"s kinda <span class="deadly">deadly</span>.
+      
+      .media.col-md-12
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h3.media-heading
+            | These bad guys do actually hurt you.
+          p
+            | They"re special tachyons, each their own flavour and special kind of nastyness. They ' energized as their brethren, so touching them just results in <span class="deadly">death</span>.
+          p
+            | There are at least three flavours: 
+            | <span class="magenta-shadow">magenta</span>, 
+            | <span class="lime-shadow">lime</span> and 
+            | <span class="cyan-shadow">cyan</span>.
+          
+      .media.col-xs-12.col-sm-10.col-sm-offset-2.col-md-4.col-md-offset-0
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h4.media-heading Bouncer (<span style="color: #f0f">Magenta</span>)
+          p
+            | They bounce a lot inside, and are rather fast compared to any other particle.
+        
+      .media.col-xs-12.col-sm-10.col-sm-offset-2.col-md-4.col-md-offset-0
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h4.media-heading Mother (<span style="color: #0f0">Lime</span>)
+          p
+            | Rather slow, they crawl into somewhere inside the playing field and then burst into a myrriad of white tachyons.
+        
+      .media.col-xs-12.col-sm-10.col-sm-offset-2.col-md-4.col-md-offset-0
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h4.media-heading Wall (<span style="color: #0ff">Cyan</span>)
+          p
+            | Average "speed", if you could call it that. What they do is stretch into the playing field, effectively cutting part of it.
+            
+      .media.col-md-12
+        .media-left
+          img.center-block(src = config.baseUrl + "/images/yeogurt-swirl.png")
+        .media-body
+          h3.media-heading
+            | ????
+          p
+            | Oh, and one last thing. There should be a way to recover the stolen energy from one of your pasts selves. After all, it all is only lost when the impact with the white fella happens, so maybe if you avoid that from happening somehow...
+          p
+            | Wouldn't that cause a <span class="paradox">paradox</span> though? Nah...

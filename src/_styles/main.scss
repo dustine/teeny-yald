@@ -1,51 +1,64 @@
-// Normalize Styles
-@import 'node_modules/normalize.css/normalize';
-@import 'icomoon';
-@import 'helper';
+// scss-lint:disable PlaceholderInExtend
+@import 'base';
 
-// Box sizing partial styles:
-// Apply a natural box layout model to all elements
-*,
-*:before,
-*:after {
-  box-sizing: border-box;
+// .yeogurt-info {
+//   margin-left: auto;
+//   margin-right: auto;
+//   max-width: 500px;
+//   text-align: center;
+// }
+//
+// .logo {
+//   margin-top: 15px;
+// }
+
+
+img {
+  @extend .image-responsive;
 }
 
-.yeogurt-info {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 500px;
-  text-align: center;
+
+.page-header {
+  .slogan {
+    @extend .text-capitalize;
+  }
 }
 
-$background: #fff8e2;
-$text: #000;
-
-.version {
-  $padding: .3em;
-  background: $background;
-  border-radius: $padding;
-  bottom: 10px;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 14px;
-  padding: $padding;
-  position: absolute;
-  right: 10px;
+.row {
+  padding-bottom: 5em;
 }
 
-.logo {
-  margin-top: 15px;
+$lime-green: rgb(158, 217, 49);
+$energized: $lime-green;
+$deadly: #f00;
+
+.energized {
+  color: $energized;
+  font-weight: bold;
 }
 
-// Styling on warning for users on IE7 or below
-.browsehappy {
-  background: $background;
-  color: $text;
-  margin: 0;
-  padding: .5em 0;
-  text-align: center;
+.deadly {
+  color: $deadly;
+  font-weight: bold;
 }
 
-body {
-  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+.paradox {
+  color: #a066ff;
+  font-weight: bold;
+}
+
+$magenta: #f0f;
+$lime: #0f0;
+$cyan: #0ff;
+
+.magenta-shadow {
+  text-shadow: 0 0 2em $magenta;
+}
+
+.lime-shadow {
+  text-shadow: 0 0 2em $lime;
+}
+
+.cyan-shadow {
+  text-shadow: 0 0 2em $cyan;
 }

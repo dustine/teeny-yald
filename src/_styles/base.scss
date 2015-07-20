@@ -1,0 +1,67 @@
+// Normalize Styles
+@import 'node_modules/normalize.css/normalize';
+@import 'variables';
+@import 'node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
+@import 'icomoon';
+@import 'helper';
+
+// Box sizing partial styles:
+// Apply a natural box layout model to all elements
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+$bg-light: #fff8e2;
+$tx-light: #000;
+
+// Styling on warning for users on IE7 or below
+.browsehappy {
+  background: $bg-light;
+  color: $tx-light;
+  margin: 0;
+  padding: .5em 0;
+  text-align: center;
+}
+
+// $dark-blue: rgb(0, 51, 102);
+$bg-bottom: $navbar-default-bg;
+$bottom-gradient: linear-gradient(to bottom, rgba($bg-bottom, 0) 0%, rgba($bg-bottom, .5) 60%, $bg-bottom 100%);
+
+body {
+  // font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+  background: $body-bg $bottom-gradient;
+  background-attachment: fixed;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 10%;
+  padding-top: 65px;
+}
+
+.navbar-right:first-of-type {
+  margin-right: 0;
+}
+
+// .bottom-gradient {
+//   background: $bottom-gradient;
+//   bottom: 0%;
+//   height: 10%;
+//   pointer-events: none;
+//   position: absolute;
+//   width: 100%;
+//   z-index: -1000;
+// }
+
+// .version {
+//   $padding: .3em;
+//   background: $bg-light;
+//   border-radius: $padding;
+//   bottom: 10px;
+//   color: $tx-light;
+//   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+//   font-size: 14px;
+//   padding: $padding;
+//   position: absolute;
+//   right: 10px;
+// }
