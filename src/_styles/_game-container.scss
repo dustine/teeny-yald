@@ -1,5 +1,6 @@
 @import 'helper';
 
+$container-text: #000;
 $game-background: #000;
 $blue-glow: #08f;
 // $loop-counter-separator:;
@@ -12,15 +13,16 @@ $metal: linear-gradient(to bottom, $metal-0 0%, $metal-1 21%, $metal-2 49%, $met
 
 // game styles
 .game-container {
+  color: $container-text;
   background: $metal-0;
   border-radius: .5rem;
   box-shadow: 0 0 1.2em .4em $blue-glow;
-  left: 50%;
-  margin-right: -50%;
+  // left: 50%;
+  // margin-right: -50%;
   pointer-events: none;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  // position: absolute;
+  // top: 50%;
+  // transform: translate(-50%, -50%);
 
   > .score-display {
     border-radius: .5em .5em 0 0;

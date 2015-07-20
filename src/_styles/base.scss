@@ -1,5 +1,6 @@
 // Normalize Styles
 @import 'node_modules/normalize.css/normalize';
+@import 'variables';
 @import 'node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
 @import 'icomoon';
 @import 'helper';
@@ -24,35 +25,43 @@ $tx-light: #000;
   text-align: center;
 }
 
-$bg-dark: rgba(0, 51, 102, 0);
-$bg-dark1: rgba(0, 51, 102, .5);
-$bg-dark2: rgba(0, 51, 102, 1);
-$bottom-gradient: linear-gradient(to bottom, $bg-dark 0%, $bg-dark1 60%, $bg-dark2 100%);
+// $dark-blue: rgb(0, 51, 102);
+$bg-bottom: $navbar-default-bg;
+$bottom-gradient: linear-gradient(to bottom, rgba($bg-bottom, 0) 0%, rgba($bg-bottom, .5) 60%, $bg-bottom 100%);
 
 body {
   // font-family: 'Open Sans', Helvetica, Arial, sans-serif;
-  padding-top: 70px;
+  background: $body-bg $bottom-gradient;
+  background-attachment: fixed;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 10%;
+  padding-top: 65px;
 }
 
-.bottom-gradient {
-  background: $bottom-gradient;
-  bottom: 0%;
-  height: 10%;
-  pointer-events: none;
-  position: absolute;
-  width: 100%;
-  z-index: -1000;
+.navbar-right:first-of-type {
+  margin-right: 0;
 }
 
-.version {
-  $padding: .3em;
-  background: $bg-light;
-  border-radius: $padding;
-  bottom: 10px;
-  color: $tx-light;
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 14px;
-  padding: $padding;
-  position: absolute;
-  right: 10px;
-}
+// .bottom-gradient {
+//   background: $bottom-gradient;
+//   bottom: 0%;
+//   height: 10%;
+//   pointer-events: none;
+//   position: absolute;
+//   width: 100%;
+//   z-index: -1000;
+// }
+
+// .version {
+//   $padding: .3em;
+//   background: $bg-light;
+//   border-radius: $padding;
+//   bottom: 10px;
+//   color: $tx-light;
+//   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+//   font-size: 14px;
+//   padding: $padding;
+//   position: absolute;
+//   right: 10px;
+// }

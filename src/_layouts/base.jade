@@ -14,6 +14,7 @@ head
   meta(name='description', content= 'A new Yeogurt application')
   meta(name='viewport', content='width=device-width, initial-scale=1.0')
   block stylesheets
+    link(rel='stylesheet', href= config.baseUrl + 'styles/base.css')
   link(rel='stylesheet', type='text/css', href='https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/darkly/bootstrap.min.css')
 
 body
@@ -34,12 +35,12 @@ body
             a(href= config.baseUrl + 'game') Game
           li
             a(href= config.baseUrl + 'credits') Credits
+        p.navbar-text.navbar-right
+          code= 'v' + site.version
   
   block content
   
-  code.version= 'v'+site.version
-  
-  div.bottom-gradient
+  //- code.version= 'v' + site.version
   
   block scripts
     script(src= config.baseUrl + 'scripts/vendor/jquery-2.1.4.min.js')

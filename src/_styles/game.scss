@@ -1,8 +1,16 @@
 @import 'base';
 
-.title-header {
-  color: $text;
+body {
+  padding-top: 100px;
+}
+
+.game {
+  @extend .center-block;
   text-align: center;
+
+  .game-container {
+    display: inline-block;
+  }
 }
 
 @import 'game-container';

@@ -1,3 +1,4 @@
+// scss-lint:disable PlaceholderInExtend
 @import 'base';
 
 // .yeogurt-info {
@@ -11,21 +12,53 @@
 //   margin-top: 15px;
 // }
 
-.game-title {
-  // text-align: center;
-  //
-  // h1 {
-  //   font-size: 4em;
-  //   margin-bottom: 0;
-  // }
 
-  .subtitle {
-    // font-style: italic;
-    // margin-top: 0;
-    text-transform: capitalize;
+img {
+  @extend .image-responsive;
+}
+
+
+.page-header {
+  .slogan {
+    @extend .text-capitalize;
   }
+}
 
-  // .container {
-  //   margin-top: 2em;
-  // }
+.row {
+  padding-bottom: 5em;
+}
+
+$lime-green: rgb(158, 217, 49);
+$energized: $lime-green;
+$deadly: #f00;
+
+.energized {
+  color: $energized;
+  font-weight: bold;
+}
+
+.deadly {
+  color: $deadly;
+  font-weight: bold;
+}
+
+.paradox {
+  color: #a066ff;
+  font-weight: bold;
+}
+
+$magenta: #f0f;
+$lime: #0f0;
+$cyan: #0ff;
+
+.magenta-shadow {
+  text-shadow: 0 0 2em $magenta;
+}
+
+.lime-shadow {
+  text-shadow: 0 0 2em $lime;
+}
+
+.cyan-shadow {
+  text-shadow: 0 0 2em $cyan;
 }

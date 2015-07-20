@@ -80,7 +80,7 @@ gulp.task('jade', () => {
     path.join(__dirname, dirs.source, '**/*.jade'),
     '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}')
   ])
-  .pipe(plugins.changed(dest))
+  // .pipe(plugins.changed(dest))
   .pipe(plugins.jade({
     jade: jade,
     locals: {
