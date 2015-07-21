@@ -5,14 +5,14 @@ import gulpLoadPlugins from 'gulp-load-plugins'
 import browserSyncLib from 'browser-sync'
 import pjson from './package.json'
 import minimist from 'minimist'
-// import runSequence from 'run-sequence'
+import runSequence from 'run-sequence'
 import pngquant from 'imagemin-pngquant'
 import del from 'del'
 import autoprefixer from 'autoprefixer-core'
 import vsource from 'vinyl-source-stream'
 import buffer from 'vinyl-buffer'
-// import es from 'event-stream'
-// import glob from 'glob'
+import es from 'event-stream'
+import glob from 'glob'
 import browserify from 'browserify'
 import gulpif from 'gulp-if'
 import jade from 'jade'
@@ -206,11 +206,8 @@ gulp.task('bootstrap', () => {
   let bootstrap = path.join(__dirname, 'node_modules', 'bootstrap-sass', 'assets')
   return gulp.src([
       // bootstrap fonts
-      path.join(bootstrap, '**/*'),
-      '!' + path.join(bootstrap, 'images'),
-      '!' + path.join(bootstrap, 'javascripts'),
-      '!' + path.join(bootstrap, 'stylesheets')
-    ])
+      path.join(bootstrap, 'fonts', '*')
+    ], {base: bootstrap})
     .pipe(plugins.changed(dest))
     .pipe(gulp.dest(dest))
 })
