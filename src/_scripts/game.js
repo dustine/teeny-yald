@@ -40,7 +40,7 @@ $(() => {
   // let $container = $('.timeline')
   // let display = $('.timeline > .display')[0]
   let hits = $('.timeline > .hits')[0]
-  let progress = $('.timeline > .progress')[0]
+  let progress = $('.timeline > .game-progress')[0]
 
   function updateTimebarHits (current, total, color) {
     color = color || 'red'
@@ -360,12 +360,11 @@ $(() => {
         .textColor('#ffffff')
         .textFont({'family': 'Open Sans', size: '4em'})
         .bind('Change', function (changed) {
-
-        })
+      })
       this.attach(this._text)
     },
     _action () {
-      this.action.call(this)
+      this.action()
     },
     _change (changed) {
       // console.log(changed, changed.keys)

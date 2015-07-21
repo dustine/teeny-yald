@@ -20,23 +20,24 @@ mixin counter(number, separator)
 block content
   block game
     .container-fluid
-      .game.col-md-12
-        .game-container
-          .score-display
-            .segmented-counter.score-counter
-              .head.-icon: span.icon- power
-              +counter(20, '.')
-              .tail Teeny Yald
-          .view-frame#teeny-yald
-          .progress-display
-            .segmented-counter.loop-counter
-              .head.-icon: span-.icon- loop
-              +counter(4)
-            .timeline-bar
-              .timeline
-                canvas.display(width = 0, height = 0)
-                canvas.hits(width = 0, height = 0)
-                canvas.progress(width = 0, height = 0)
+      .row
+        .game.col-md-12
+          .game-container
+            .score-display
+              .segmented-counter.score-counter
+                .head.-icon: span.icon- power
+                +counter(20, '.')
+                .tail Teeny Yald
+            .view-frame#teeny-yald
+            .progress-display
+              .segmented-counter.loop-counter
+                .head.-icon: span-.icon- loop
+                +counter(4)
+              .timeline-bar
+                .timeline
+                  canvas.display(width = 0, height = 0)
+                  canvas.hits(width = 0, height = 0)
+                  canvas.game-progress(width = 0, height = 0)
 
 // Add extra scripts
 block append scripts
