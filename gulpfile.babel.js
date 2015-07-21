@@ -85,7 +85,8 @@ gulp.task('jade', () => {
     jade: jade,
     locals: {
       config: config,
-      debug: !production,
+      debug: true,
+      production: production,
       site: {
         data: siteData[dirs.data],
         version: version
@@ -115,7 +116,7 @@ gulp.task('sass', () => {
       includePaths: [path.join(__dirname, dirs.source, dirs.styles) ]
     }).on('error', plugins.sass.logError))
     .pipe(plugins.postcss([autoprefixer({browsers: ['last 2 version', '> 5%', 'safari 5', 'ios 6', 'android 4']})]))
-    .pipe(plugins.sourcemaps.write())
+    .pipe(plugins.sourcemaps.write('./'))
     .pipe(gulp.dest(dest))
     .pipe(browserSync.stream())
 })
@@ -149,46 +150,43 @@ gulp.task('imagemin', () => {
       .pipe(gulp.dest(dest))
 })
 
+// TODO: Join common code in these two tasks ?
 gulp.task('browserify-main', () => {
-  let source = path.join(__dirname, dirs.source, dirs.scripts, 'main.js')
   let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''))
   return browserify(
-    source, {
+  path.join(__dirname, dirs.source, dirs.scripts, '/main.js'), {
     debug: true,
     transform: [
       require('envify'),
       require('babelify')
     ]
   }).bundle()
-    .pipe(vsource(path.basename(source)))
+    .pipe(vsource(path.basename('main.js')))
     .pipe(buffer())
     .pipe(plugins.sourcemaps.init({loadMaps: true}))
     .pipe(gulpif(production, plugins.uglify()))
     .on('error', plugins.util.log)
     .pipe(plugins.sourcemaps.write('./'))
     .pipe(gulp.dest(dest))
-    .pipe(browserSync.stream())
 })
 
 gulp.task('browserify-game', () => {
-  let source = path.join(__dirname, dirs.source, dirs.scripts, 'game.js')
   let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''))
   return browserify(
-    source, {
+  path.join(__dirname, dirs.source, dirs.scripts, '/game.js'), {
     debug: true,
     transform: [
       require('envify'),
       require('babelify')
     ]
   }).bundle()
-    .pipe(vsource(path.basename(source)))
+    .pipe(vsource(path.basename('game.js')))
     .pipe(buffer())
     .pipe(plugins.sourcemaps.init({loadMaps: true}))
     .pipe(gulpif(production, plugins.uglify()))
     .on('error', plugins.util.log)
     .pipe(plugins.sourcemaps.write('./'))
     .pipe(gulp.dest(dest))
-    .pipe(browserSync.stream())
 })
 
 gulp.task('browserify', ['browserify-main', 'browserify-game'])
@@ -252,6 +250,7 @@ gulp.task('serve', [
     browserSync.init({
       open: open ? 'local' : false,
       startPath: config.baseUrl,
+      port: config.port || 3000,
       server: {
         baseDir: taskTarget,
         routes: (() => {
