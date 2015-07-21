@@ -5,7 +5,7 @@ import $ from 'jquery'
 let $container = $('.timeline')
 let display = $('.timeline > .display')[0]
 let hits = $('.timeline > .hits')[0]
-let progress = $('.timeline > .progress')[0]
+let progress = $('.timeline > .game-progress')[0]
 
 // add correct border radius to counter digits
 function addIntegerBorderRadius (length, i, elem) {

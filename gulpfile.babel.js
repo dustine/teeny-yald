@@ -80,33 +80,35 @@ gulp.task('jade', () => {
     path.join(__dirname, dirs.source, '**/*.jade'),
     '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}')
   ])
-  // .pipe(plugins.changed(dest))
-  .pipe(plugins.jade({
-    jade: jade,
-    locals: {
-      config: config,
-      debug: !production,
-      site: {
-        data: siteData[dirs.data],
-        version: version
+    .pipe(plugins.changed(dest))
+    .pipe(plugins.jade({
+      jade: jade,
+      locals: {
+        config: config,
+        debug: true,
+        production: production,
+        site: {
+          data: siteData[dirs.data],
+          version: version
+        }
       }
-    }
-  }))
-  .pipe(plugins.htmlmin({
-    collapseBooleanAttributes: true,
-    conservativeCollapse: true,
-    removeCommentsFromCDATA: true,
-    removeEmptyAttributes: true,
-    removeRedundantAttributes: true
-  }))
-  .pipe(gulp.dest(dest))
-  .pipe(browserSync.stream())
+    }))
+    .pipe(plugins.htmlmin({
+      collapseBooleanAttributes: true,
+      conservativeCollapse: true,
+      removeCommentsFromCDATA: true,
+      removeEmptyAttributes: true,
+      removeRedundantAttributes: true
+    }))
+    .pipe(gulp.dest(dest))
+    .pipe(browserSync.stream())
 })
 
 // Sass compilation
+// TODO: Check if the return is needed here
 gulp.task('sass', () => {
   let dest = path.join(__dirname, taskTarget, dirs.styles.replace(/^_/, ''))
-  gulp.src(path.join(__dirname, dirs.source, dirs.styles, '/*.{scss,sass}'))
+  return gulp.src(path.join(__dirname, dirs.source, dirs.styles, '/*.{scss,sass}'))
     .pipe(plugins.plumber())
     .pipe(plugins.sourcemaps.init())
     .pipe(plugins.sass({
@@ -115,25 +117,26 @@ gulp.task('sass', () => {
       includePaths: [path.join(__dirname, dirs.source, dirs.styles) ]
     }).on('error', plugins.sass.logError))
     .pipe(plugins.postcss([autoprefixer({browsers: ['last 2 version', '> 5%', 'safari 5', 'ios 6', 'android 4']})]))
-    .pipe(plugins.sourcemaps.write())
+    .pipe(plugins.sourcemaps.write('./'))
     .pipe(gulp.dest(dest))
     .pipe(browserSync.stream())
 })
 
 // ESLint
+// TODO: Check if the return is needed here
 gulp.task('eslint', () => {
-  gulp.src([
+  return gulp.src([
     path.join(__dirname, 'gulpfile.js'),
     path.join(__dirname, dirs.source, '**/*.js'),
     // Ignore all vendor folder files
     '!' + path.join(__dirname, '**/vendor/**', '*')
   ])
-  .pipe(browserSync.reload({stream: true, once: true}))
-  .pipe(plugins.eslint({
-    useEslintrc: true
-  }))
-  .pipe(plugins.eslint.format())
-  .pipe(plugins.if(!browserSync.active, plugins.eslint.failAfterError()))
+    .pipe(browserSync.reload({stream: true, once: true}))
+    .pipe(plugins.eslint({
+      useEslintrc: true
+    }))
+    .pipe(plugins.eslint.format())
+    .pipe(plugins.if(!browserSync.active, plugins.eslint.failAfterError()))
 })
 
 // Imagemin
@@ -149,46 +152,44 @@ gulp.task('imagemin', () => {
       .pipe(gulp.dest(dest))
 })
 
+// TODO: Join common code in these two tasks ?
 gulp.task('browserify-main', () => {
-  let source = path.join(__dirname, dirs.source, dirs.scripts, 'main.js')
   let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''))
   return browserify(
-    source, {
+  path.join(__dirname, dirs.source, dirs.scripts, '/main.js'), {
     debug: true,
     transform: [
       require('envify'),
       require('babelify')
     ]
   }).bundle()
-    .pipe(vsource(path.basename(source)))
+    .pipe(vsource(path.basename('main.js')))
     .pipe(buffer())
     .pipe(plugins.sourcemaps.init({loadMaps: true}))
     .pipe(gulpif(production, plugins.uglify()))
     .on('error', plugins.util.log)
     .pipe(plugins.sourcemaps.write('./'))
     .pipe(gulp.dest(dest))
-    .pipe(browserSync.stream())
 })
 
 gulp.task('browserify-game', () => {
-  let source = path.join(__dirname, dirs.source, dirs.scripts, 'game.js')
   let dest = path.join(__dirname, taskTarget, dirs.scripts.replace(/^_/, ''))
   return browserify(
-    source, {
-    debug: true,
-    transform: [
-      require('envify'),
-      require('babelify')
-    ]
-  }).bundle()
-    .pipe(vsource(path.basename(source)))
+    path.join(__dirname, dirs.source, dirs.scripts, '/game.js'), {
+      debug: true,
+      transform: [
+        require('envify'),
+        require('babelify')
+      ]
+    })
+    .bundle()
+    .pipe(vsource(path.basename('game.js')))
     .pipe(buffer())
     .pipe(plugins.sourcemaps.init({loadMaps: true}))
     .pipe(gulpif(production, plugins.uglify()))
     .on('error', plugins.util.log)
     .pipe(plugins.sourcemaps.write('./'))
     .pipe(gulp.dest(dest))
-    .pipe(browserSync.stream())
 })
 
 gulp.task('browserify', ['browserify-main', 'browserify-game'])
@@ -242,66 +243,65 @@ gulp.task('build', [
 
 // Server tasks with watch
 gulp.task('serve', [
-    'imagemin',
-    'copy',
-    'jade',
-    'browserify',
-    'sass'
-  ], () => {
+  'imagemin',
+  'copy',
+  'jade',
+  'browserify',
+  'sass'
+], () => {
 
-    browserSync.init({
-      open: open ? 'local' : false,
-      startPath: config.baseUrl,
-      server: {
-        baseDir: taskTarget,
-        routes: (() => {
-          let routes = {}
+  browserSync.init({
+    open: open ? 'local' : false,
+    startPath: config.baseUrl,
+    port: config.port || 3000,
+    server: {
+      baseDir: taskTarget,
+      routes: (() => {
+        let routes = {}
 
-          // Map base URL to routes
-          routes[config.baseUrl] = taskTarget
+        // Map base URL to routes
+        routes[config.baseUrl] = taskTarget
 
-          return routes
-        })()
-      }
-    })
-
-    if (!production) {
-
-      // Styles
-      gulp.watch([
-        path.join(__dirname, dirs.source, dirs.styles, '**/*.{scss,sass}')
-      ], ['sass'])
-
-      // Jade Templates
-      gulp.watch([
-        path.join(__dirname, dirs.source, '**/*.jade'),
-        path.join(__dirname, dirs.source, dirs.data, '**/*.json')
-      ], ['jade'])
-
-      // Copy
-      gulp.watch([
-        path.join(__dirname, dirs.source, '**/*'),
-        '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}'),
-        '!' + path.join(__dirname, dirs.source, '**/*.jade')
-      ], ['copy'])
-
-      // Scripts
-      gulp.watch([
-        path.join(__dirname, dirs.source, '**/*.js')
-      ], ['browserify'])
-
-      // Images
-      gulp.watch([
-        path.join(__dirname, dirs.source, dirs.images, '**/*.{jpg,jpeg,gif,svg,png}')
-      ], ['imagemin'])
-
-      // All other files
-      gulp.watch([
-        path.join(__dirname, dirs.temporary, '**/*')
-      ]).on('change', browserSync.reload)
+        return routes
+      })()
     }
+  })
+
+  if (!production) {
+    // Styles
+    gulp.watch([
+      path.join(__dirname, dirs.source, dirs.styles, '**/*.{scss,sass}')
+    ], ['sass'])
+
+    // Jade Templates
+    gulp.watch([
+      path.join(__dirname, dirs.source, '**/*.jade'),
+      path.join(__dirname, dirs.source, dirs.data, '**/*.json')
+    ], ['jade'])
+
+    // Copy
+    gulp.watch([
+      path.join(__dirname, dirs.source, '**/*'),
+      '!' + path.join(__dirname, dirs.source, '{**/\_*,**/\_*/**}'),
+      '!' + path.join(__dirname, dirs.source, '**/*.jade')
+    ], ['copy'])
+
+    // Scripts
+    gulp.watch([
+      path.join(__dirname, dirs.source, '**/*.js')
+    ], ['browserify'])
+
+    // Images
+    gulp.watch([
+      path.join(__dirname, dirs.source, dirs.images, '**/*.{jpg,jpeg,gif,svg,png}')
+    ], ['imagemin'])
+
+    // All other files
+    gulp.watch([
+      path.join(__dirname, dirs.temporary, '**/*')
+    ]).on('change', browserSync.reload)
   }
-)
+})
 
 // Testing
 gulp.task('test', (done) => {
