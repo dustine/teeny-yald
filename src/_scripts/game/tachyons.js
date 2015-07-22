@@ -1,15 +1,20 @@
 'use strict'
 
+// function scale (val, from, to) {
+//   return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
+// }
+
 module.exports = function (Crafty,
   {WIDTH: WIDTH, HEIGHT: HEIGHT, BORDER: BORDER, SPAWN_BORDER: SPAWN_BORDER,
     DESPAWN_BORDER: DESPAWN_BORDER, TACHYON_SIZE: SIZE}) {
+  // const FPS = Crafty.timer.FPS()
   const FADE_TIME = 2000
 
   Crafty.c('Tachyon', {
     init () {
       this.requires('2D, DOM, Color, Tween, Collision')
       this.attr({w: SIZE, h: SIZE, alpha: 0})
-      this.z = 300
+      this.z = 400
     },
     remove () {
       // NOTE: Paranoid code (assumes spawner may be gone or type was never declared)
@@ -70,6 +75,7 @@ module.exports = function (Crafty,
         x: 0,
         y: 0
       }
+      this.z = 300
     },
     _enterFrame () {
       // remove far-gone particles
@@ -94,10 +100,13 @@ module.exports = function (Crafty,
       this.x += this._movement.x
       this.y += this._movement.y
     },
-    whiteTachyon ({origin: origin, angle: angle, speed: speed, id: id}) {
+    whiteTachyon ({origin: origin, angle: angle, speed: speed, id: id, paradoxy: paradoxy, immediateSpawn: immediateSpawn}) {
       this.id = id
       this._angle = angle
       this._speed = speed
+      if (paradoxy) {
+        this.addComponent('Paradoxy')
+      }
       this.x = origin.x - Math.round(SIZE / 2)
       this.y = origin.y - Math.round(SIZE / 2)
       this._movement.x = Math.cos(angle) * speed
@@ -105,10 +114,17 @@ module.exports = function (Crafty,
       this._movement.y = -Math.sin(angle) * speed
       this.origin('center')
       this.rotation = (Math.PI - angle) * (180 / Math.PI)
-      this.one('TweenEnd', function () {
+      if (immediateSpawn) {
+        this.cancelTween('alpha')
+        this.alpha = 1
         this.addComponent('Energized')
         this.bind('EnterFrame', this._enterFrame)
-      })
+      } else {
+        this.one('TweenEnd', function () {
+          this.addComponent('Energized')
+          this.bind('EnterFrame', this._enterFrame)
+        })
+      }
       return this
     }
   })
@@ -147,6 +163,103 @@ module.exports = function (Crafty,
         // sensible values are 0-3
         jitter: 0
       })
+    }
+  })
+
+  Crafty.c('LimeTachyon', {
+    _angle: 0,
+    _speed: 0,
+
+    init () {
+      this.requires('Tachyon, Delay')
+      this.attr({w: SIZE * 4, h: SIZE * 4})
+      this._movement = {}
+      this.state = 'Moving'
+    },
+    _enterFrame () {
+      switch (this.state) {
+        case 'Moving':
+          // moving to spawning location
+          this.dist += this._speed
+          if (this.dist >= this.summonDist) {
+            // this.w = this.maxSize
+            this.state = 'Pause'
+            this.delay(function () {
+              this.state = 'Spawning'
+              this.curTach = 0
+              // always spawn the first child right away
+              this.spawnFrame = +Infinity
+            }, FADE_TIME / 2)
+          }
+          this.x += this._movement.x
+          this.y += this._movement.y
+          break
+
+        case 'Spawning':
+          // in spawning location
+          if (this.curTach >= this.tachyons.length) {
+            this.state = 'Fading'
+            break
+          }
+          // rotate
+          this.rotation += this._speed * this.summonSpeed
+          // time the child spawning
+          this.spawnFrame++
+          if (this.spawnFrame < 5 * this.summonSpeed) break
+          this.spawnFrame = 0
+          // spawn the child
+          let tachyon = this.tachyons[this.curTach++]
+          Crafty.e('Tachyon')
+            .type('White')
+            .whiteTachyon({
+              origin: {
+                x: this._x + this._w / 2,
+                y: this._y + this._h / 2
+              },
+              angle: tachyon.angle,
+              speed: tachyon.speed,
+              id: tachyon.id,
+              paradoxy: tachyon.paradoxy,
+              immediateSpawn: true
+            })
+          break
+
+        case 'Fading':
+          this.unbind('EnterFrame', this._enterFrame)
+          this.removeComponent('Deadly')
+          this.one('TweenEnd', function () {
+            this.destroy()
+          })
+          this.tween({alpha: 0}, FADE_TIME / 2)
+          break
+      }
+    },
+    _spawn () {
+
+    },
+    limeTachyon ({origin: origin, dest: dest, angle: angle, speed: speed, summonDist: summonDist, summonSpeed: summonSpeed, tachyons: tachyons}) {
+      this.dist = 0
+      this.tachyons = tachyons
+      // where to start spawning the white tachs
+      this.summonDist = (Math.hypot(
+        Math.abs(origin.y - dest.y),
+        Math.abs(origin.x - dest.x)
+      ) + this.w) * summonDist
+      this.summonSpeed = summonSpeed
+      this._angle = angle
+      this._speed = speed
+      this.x = origin.x - Math.round(SIZE / 2)
+      this.y = origin.y - Math.round(SIZE / 2)
+      this.origin('center')
+      this._movement.x = Math.cos(angle) * speed
+      // NOTE: y axis is flipped
+      this._movement.y = -Math.sin(angle) * speed
+      this.rotation = (Math.PI - angle) * (180 / Math.PI)
+      this.one('TweenEnd', function () {
+        this.addComponent('Deadly')
+        this.bind('EnterFrame', this._enterFrame)
+      })
+      return this
     }
   })
 
@@ -199,7 +312,6 @@ module.exports = function (Crafty,
         Math.abs(origin.y - dest.y) + SPAWN_BORDER,
         Math.abs(origin.x - dest.x) + SPAWN_BORDER
       ) + this.w
-      dest = {x: WIDTH / 2, y: HEIGHT / 2}
       this._angle = angle
       this._speed = speed
       this.x = origin.x - Math.round(SIZE / 2)

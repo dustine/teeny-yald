@@ -124,7 +124,7 @@ $(() => {
   const DESPAWN_BORDER = BORDER
   // game timings
   // in seconds thanks to Crafty.timer.FPS()
-  const GAME_LENGTH = 60
+  const GAME_LENGTH = 60 * 3
   const SCRATCH_LENGTH = 2
 
   // player constants
@@ -246,11 +246,11 @@ $(() => {
       })
       this.css('border-radius', '100%')
       this.origin('center')
+      /* eslint-disable new-cap */
       this.collision(
-        /* eslint-disable new-cap */
         new Crafty.circle(PLAYER_RADIUS, PLAYER_RADIUS, PLAYER_RADIUS)
-        /* eslint-enable new-cap */
       )
+      /* eslint-enable new-cap */
     }
   })
 
