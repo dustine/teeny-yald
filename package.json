@@ -1,6 +1,6 @@
 {
   "name": "teeny-yald",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "dependencies": {
     "babelify": "^6.1.3",

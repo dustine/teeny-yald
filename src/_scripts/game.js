@@ -246,11 +246,11 @@ $(() => {
       })
       this.css('border-radius', '100%')
       this.origin('center')
+      /* eslint-disable new-cap */
       this.collision(
-        /* eslint-disable new-cap */
         new Crafty.circle(PLAYER_RADIUS, PLAYER_RADIUS, PLAYER_RADIUS)
-        /* eslint-enable new-cap */
       )
+      /* eslint-enable new-cap */
     }
   })
 
