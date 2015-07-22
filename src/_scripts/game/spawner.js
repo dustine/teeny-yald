@@ -22,29 +22,18 @@ function angleBetween (origin, dest) {
   return Math.atan2(-(dest.y - origin.y), dest.x - origin.x)
 }
 
-// function randomAngle (min, max) {
-//   if (min > max) {
-//     max += 2 * Math.PI
-//     let result = Math.random() * (max - min) + min
-//     while (result < -Math.PI) {
-//       result += 2 * Math.PI
-//     }
-//     while (result > Math.PI) {
-//       result -= 2 * Math.PI
-//     }
-//     return result
-//   } else {
-//     return Math.random() * (max - min) + min
-//   }
-// }
-
 module.exports = function (Crafty,
   {WIDTH: WIDTH, HEIGHT: HEIGHT, BORDER: BORDER, SPAWN_BORDER: SPAWN_BORDER,
     DESPAWN_BORDER: DESPAWN_BORDER}) {
   const FPS = Crafty.timer.FPS()
   let types = ['White']
-  let specials = ['Cyan']
+  let specials = ['Cyan', 'Lime']
   // let types = ['Debug']
+  let initialCount = {
+    'White': 0,
+    'Cyan': 0,
+    'Lime': 0
+  }
 
   Crafty.c('Spawner', {
     _f: 0,
@@ -56,25 +45,29 @@ module.exports = function (Crafty,
       this.killers = []
       this.count = {
         'White': 0,
-        'Cyan': 0
+        'Cyan': 0,
+        'Lime': 0
       }
       this.limit = {
         'White': 200,
-        'Cyan': 3,
+        'Cyan': 2,
+        'Lime': 2,
         'Debug': 1000
       }
       this.bind('StartLoop', this.start)
       this.bind('EndLoop', this.reset)
       this._whiteId = 0
-    // this.requires('2D, Persist')
     },
     _enterFrame () {
-      // console.log(this.count)
+      let spawner = this
       if (!this._frames[this._f]) {
         this._frames[this._f] = this._generate()
+      } else {
+        this._frames[this._f].forEach((elem) => {
+          spawner.count[elem.type]++
+        })
       }
       this._spawn(this._frames[this._f++])
-      // console.log(this.count)
     },
     _generate () {
       // TODO: Balance Tachyon spawning
@@ -86,12 +79,10 @@ module.exports = function (Crafty,
         return spawner._f >= spawner._spawnFrame
       }
 
-      function createWhiteTachyons () {
+      function createEnergized (number) {
         // check if a type can spawn with the available components
         function canSpawn (type) {
-          if (spawner.count[type] >= spawner.limit[type]) return false
-          // if (type === 'Cyan') return false
-          return true
+          return spawner.count[type] < spawner.limit[type]
         }
 
         // the max number allowed of a particle to spawn in a round
@@ -99,22 +90,17 @@ module.exports = function (Crafty,
           let min, randomMax
           switch (type) {
             case 'White':
-              min = progression * 20
-              randomMax = Math.ceil(scale(Math.random() * Math.pow(progression, 2), [0, 1], [min, min + 10]))
+              min = progression * 10
+              randomMax = Math.ceil(scale(Math.random() * Math.pow(progression, 2), [0, 1], [min, min + 5]))
               return randomMax === 0 ? 1 : randomMax
-            // case 'Cyan':
-            //   if (progression < 0.25) return 0
-            //   min = scale(progression, [0.25, 1], [0, 3])
-            //   randomMax = Math.round(Math.random() * min)
-            //   console.log(randomMax)
-            //   return randomMax
           }
         }
 
         // fill the spawn thing with the info
         let spawns = []
+
         types.forEach(function (type) {
-          let randomMax = typeWiseRandomMax(type)
+          let randomMax = number || typeWiseRandomMax(type)
           for (let i = 0; i < randomMax; i++) {
             if (!canSpawn(type)) break
             let elem = {type}
@@ -286,12 +272,24 @@ module.exports = function (Crafty,
           case 'White':
             let id = spawner._whiteId++
             elem.id = id
-            elem.speed = scale(Math.random(), [0, 1], [4, 6])
-            break
-          case 'Cyan':
-            // elem.maxSize = 500
             elem.speed = scale(Math.random(), [0, 1], [3, 5])
             break
+          case 'Cyan':
+            elem.speed = scale(Math.random(), [0, 1], [3, 5])
+            break
+          case 'Lime':
+            elem.speed = scale(Math.random(), [0, 1], [2, 3])
+            elem.summonDist = scale(Math.random(), [0, 1], [0.25, 0.75])
+            elem.summonSpeed = scale(Math.random(), [0, 1], [0.25, 1])
+            // children tachyon
+            let numberTachs = scale(Math.random(), [0, 1], [25, 50])
+            elem.tachyons = createEnergized(numberTachs)
+            elem.tachyons.forEach((elem) => {
+              elem.angle = scale(Math.random(), [0, 1], [-Math.PI, +Math.PI])
+            })
+            break
+          case 'Magenta':
+            elem.speed = scale(Math.random(), [0, 1], [5, 6])
         }
       }
 
@@ -299,28 +297,21 @@ module.exports = function (Crafty,
         return []
       }
 
-      function resetSpawnCounter () {
-        // reset spawner counter
-        // let minTime = scale(this._f / this._lastFrame, [0, 1], [FPS * 2, FPS])
-        // let maxTime = minTime + FPS / 2
-        spawner._spawnFrame = spawner._f + scale(Math.random(), [0, 1], [FPS * 0.5, FPS * 1.5])
-      }
-
-      resetSpawnCounter()
+      // reset spawn counter
+      spawner._spawnFrame = spawner._f + scale(Math.random(), [0, 1], [FPS * 0.5, FPS * 1.5])
 
       // summon normal spawns
-      let spawns = createWhiteTachyons()
-
+      let spawns = createEnergized()
       spawns.forEach((elem) => {
         pickMovement(elem)
-        addTypeLogic(elem)
       })
 
       // attempt special spawns
       function canAddSpecial (special) {
         if (special) {
           switch (special.type) {
-            case 'Cyan':
+            default:
+              console.log(special.type, spawner.count[special.type], spawner.limit[special.type])
               return spawner.count[special.type] < spawner.limit[special.type]
           }
           return false
@@ -330,6 +321,7 @@ module.exports = function (Crafty,
 
       function addLimitingLogic (special) {
         spawner.count[special.type]++
+        console.log(special.type, spawner.count[special.type], spawner.limit[special.type])
       }
 
       function resetSpecialCounter () {
@@ -353,7 +345,7 @@ module.exports = function (Crafty,
         }
         // check if there was a type to begin with
         if (special.type) {
-          console.log(special.type)
+          console.log(special.type, 'has been spawned')
           pickMovement(special)
           addTypeLogic(special)
           spawns.push(special)
@@ -369,22 +361,28 @@ module.exports = function (Crafty,
           case 'White':
             // paradox-inducing
             if (spawner.killers.indexOf(elem.id) >= 0) {
-              elem.addComponent('Paradoxy')
+              elem.paradoxy = true
             }
+            break
+          case 'Lime':
+            elem.tachyons.forEach((tach) => {
+              if (spawner.killers.indexOf(tach.id) >= 0) {
+                tach.paradoxy = true
+              }
+            })
+            break
         }
       }
 
       frame.forEach(function (elem) {
+        addTypeSpawnLogic(elem)
         let tachyon = Crafty.e('Tachyon')
           .type(elem.type)
         let constructor = elem.type.toLowerCase() + 'Tachyon'
         tachyon[constructor](elem)
-        addTypeSpawnLogic(tachyon)
       })
-      // console.log('whiteTachyons', Crafty('WhiteTachyon').length)
     },
     spawner (gameDuration) {
-      // this._gameEnd = gameEnd * Crafty.timer.FPS()
       this._lastFrame = gameDuration * Crafty.timer.FPS()
       this.reset()
       return this
@@ -392,11 +390,14 @@ module.exports = function (Crafty,
     reset () {
       this._f = 0
       this._spawnFrame = 0
-      this._specialFrame = this._lastFrame / 4
+      this._specialFrame = FPS * 20
+      // this._specialFrame = 0
       this.unbind('EnterFrame')
+      // console.log(this.killers)
       return this
     },
     start () {
+      this.count = initialCount
       this.bind('EnterFrame', this._enterFrame)
       return this
     }

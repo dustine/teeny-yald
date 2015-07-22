@@ -124,7 +124,7 @@ $(() => {
   const DESPAWN_BORDER = BORDER
   // game timings
   // in seconds thanks to Crafty.timer.FPS()
-  const GAME_LENGTH = 60
+  const GAME_LENGTH = 60 * 3
   const SCRATCH_LENGTH = 2
 
   // player constants
