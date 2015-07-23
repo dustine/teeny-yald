@@ -166,6 +166,93 @@ module.exports = function (Crafty,
     }
   })
 
+  Crafty.c('MagentaTachyon', {
+    _angle: 0,
+    _speed: 0,
+    init () {
+      this.requires('Tachyon')
+      this._movement = {}
+      this.attr({w: SIZE * 2, h: SIZE * 2})
+    },
+    _enterFrame () {
+      // remove far-gone particles
+      if (this._x < -DESPAWN_BORDER) {
+        this.destroy()
+        return
+      }
+      if (this._x > WIDTH - this.w + DESPAWN_BORDER) {
+        this.destroy()
+        return
+      }
+      if (this._y < -DESPAWN_BORDER) {
+        this.destroy()
+        return
+      }
+      if (this._y > HEIGHT - this.h + DESPAWN_BORDER) {
+        this.destroy()
+        return
+      }
+
+      // bounce
+      if (this.bouncing) {
+        let tachyon = this
+        let bounceX = function () {
+          if (tachyon.curBounce < tachyon.bounces) {
+            tachyon.curBounce++
+            tachyon._movement.x = -tachyon._movement.x
+          }
+        }
+
+        let bounceY = function () {
+          if (tachyon.curBounce < tachyon.bounces) {
+            tachyon.curBounce++
+            tachyon._movement.y = -tachyon._movement.y
+          }
+        }
+
+        if (this._x + this._movement.x < BORDER) {
+          bounceX()
+        }
+        if (this._x + this._movement.x > WIDTH - this.w - BORDER) {
+          bounceX()
+        }
+        if (this._y + this._movement.y < BORDER) {
+          bounceY()
+        }
+        if (this._y + this._movement.y > HEIGHT - this.h - BORDER) {
+          bounceY()
+        }
+      } else {
+        if (this._x >= BORDER && this._x <= WIDTH - this.w - BORDER && this._y >= BORDER && this._y <= HEIGHT - this.h - BORDER) {
+          this.bouncing = true
+        }
+      }
+
+      // move
+      this.x += this._movement.x
+      this.y += this._movement.y
+    },
+    magentaTachyon ({origin: origin, angle: angle, speed: speed, bounces: bounces}) {
+      this._angle = angle
+      this._speed = speed
+      this.bouncing = false
+      this.bounces = bounces
+      this.curBounce = 0
+      this.x = origin.x - Math.round(SIZE / 2)
+      this.y = origin.y - Math.round(SIZE / 2)
+      this._movement.x = Math.cos(angle) * speed
+      // NOTE: y axis is flipped
+      this._movement.y = -Math.sin(angle) * speed
+      this.origin('center')
+      this.rotation = (Math.PI - angle) * (180 / Math.PI)
+      this.one('TweenEnd', function () {
+        this.addComponent('Deadly')
+        this.bind('EnterFrame', this._enterFrame)
+      })
+      return this
+    }
+  })
+
   Crafty.c('LimeTachyon', {
     _angle: 0,
     _speed: 0,

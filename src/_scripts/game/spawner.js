@@ -27,12 +27,14 @@ module.exports = function (Crafty,
     DESPAWN_BORDER: DESPAWN_BORDER}) {
   const FPS = Crafty.timer.FPS()
   let types = ['White']
-  let specials = ['Cyan', 'Lime']
+  let specials = ['Cyan', 'Lime', 'Magenta']
   // let types = ['Debug']
+  // let specials = ['Magenta']
   let initialCount = {
     'White': 0,
     'Cyan': 0,
-    'Lime': 0
+    'Lime': 0,
+    'Magenta': 0
   }
 
   Crafty.c('Spawner', {
@@ -43,15 +45,12 @@ module.exports = function (Crafty,
       this._spawnFrame = 0
       this._frames = []
       this.killers = []
-      this.count = {
-        'White': 0,
-        'Cyan': 0,
-        'Lime': 0
-      }
+      this.count = initialCount
       this.limit = {
         'White': 200,
         'Cyan': 2,
         'Lime': 2,
+        'Magenta': 5,
         'Debug': 1000
       }
       this.bind('StartLoop', this.start)
@@ -115,7 +114,7 @@ module.exports = function (Crafty,
       // add location and movement direction data
       function pickMovement (elem) {
         // type-wise logic
-        let safePerimeter = 0.8
+        let safePerimeter = 0.5
         switch (elem.type) {
           case 'Cyan':
             // origin
@@ -282,14 +281,15 @@ module.exports = function (Crafty,
             elem.summonDist = scale(Math.random(), [0, 1], [0.25, 0.75])
             elem.summonSpeed = scale(Math.random(), [0, 1], [0.25, 1])
             // children tachyon
-            let numberTachs = scale(Math.random(), [0, 1], [25, 50])
-            elem.tachyons = createEnergized(numberTachs)
+            let number = scale(Math.random(), [0, 1], [25, 50])
+            elem.tachyons = createEnergized(number)
             elem.tachyons.forEach((elem) => {
               elem.angle = scale(Math.random(), [0, 1], [-Math.PI, +Math.PI])
             })
             break
           case 'Magenta':
             elem.speed = scale(Math.random(), [0, 1], [5, 6])
+            elem.bounces = scale(Math.random(), [0, 1], [5, 15])
         }
       }
 
