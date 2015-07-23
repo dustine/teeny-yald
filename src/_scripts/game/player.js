@@ -123,7 +123,7 @@ module.exports = function (Crafty,
         }
       })
       this.attr({
-        score: 1000
+        score: 0
       })
 
       var die = function () {
@@ -216,7 +216,7 @@ module.exports = function (Crafty,
     _recordFirstFrame: function (frame) {
       // this._firstFrame = frame.frame
     },
-     _record: function (frame) {
+    _record: function (frame) {
       this.frames[this.frame++] = {
         // dt: frame.dt,
         x: this.x,

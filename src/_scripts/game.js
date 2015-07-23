@@ -42,6 +42,27 @@ $(() => {
   let hits = $('.timeline > .hits')[0]
   let progress = $('.timeline > .game-progress')[0]
 
+  function resetTimebarHits () {
+    let color = 'red'
+    let context = hits.getContext('2d')
+    // let x = Math.floor(hits.width * (current / total)) - 0.5
+    context.clearRect(0, 0, hits.width, hits.height)
+    runs.forEach((elem) => {
+      context.beginPath()
+      let x = Math.floor(hits.width * (elem.time / (GAME_LENGTH * 1000))) - 0.5
+      console.log(x)
+      let gradient = context.createLinearGradient(0, 0, 0, progress.height)
+      gradient.addColorStop(0, 'rgb(121, 0, 0)')
+      gradient.addColorStop(0.5, color)
+      gradient.addColorStop(1, 'rgb(121, 0, 0)')
+      context.strokeStyle = gradient
+      context.lineWidth = 1
+      context.moveTo(x, 0)
+      context.lineTo(x, Math.round(hits.height * 0.75))
+      context.stroke()
+    })
+  }
+
   function updateTimebarHits (current, total, color) {
     color = color || 'red'
     let context = hits.getContext('2d')
@@ -195,19 +216,23 @@ $(() => {
   function newRun (info) {
     let score = (info && info.score) || player.score
     runs.push({
+      id: info.id,
       score: score,
       // run times are saved in ms
       time: Math.round(clock.time() * 1000)
     })
   }
 
+  let ghost = 0
+
   Crafty.bind('PlayerScratch', function (info) {
     updateTimebarHits(clock.time(), GAME_LENGTH)
     // ready the new ghost
     if (info.frames !== []) {
       Crafty.e('Ghost')
-        .Ghost(info.tachId, info.frames, info.score)
+        .Ghost(ghost++, info.tachId, info.frames, info.score)
     }
+    info.id = ghost
     // player caused a paradox
     if (spawner.killers.indexOf(info.tachId) >= 0) {
       let doubleDead
@@ -217,6 +242,11 @@ $(() => {
         }
       })
       player.regenerate(info, doubleDead)
+      // remove old run
+      runs = runs.filter((elem) => {
+        return elem.id !== doubleDead.id
+      })
+      resetTimebarHits()
       doubleDead.destroy()
     } else {
       newRun(info)
@@ -229,6 +259,12 @@ $(() => {
   })
 
   Crafty.bind('PlayerKill', function (info) {
+    // ready the 'new' ghost (for replays)
+    if (info.frames !== []) {
+      Crafty.e('Ghost')
+        .Ghost(ghost++, info.tachId, info.frames, info.score)
+    }
+    info.id = ghost
     newRun(info)
     updateTimebarHits(clock.time(), GAME_LENGTH)
     Crafty.scene('GameOver')
@@ -438,6 +474,7 @@ $(() => {
     // clear internal logic
     runs = []
     loops = 1
+    ghost = 0
     player = Crafty.e('Player')
     Crafty.scene('Scratch')
   }, function () {

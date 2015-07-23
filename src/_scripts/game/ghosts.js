@@ -39,7 +39,8 @@ module.exports = function (Crafty, {SCRATCH_LENGTH: SCRATCH_LENGTH}) {
       this.removeComponent('Active')
       this.tween({alpha: 0}, 200)
     },
-    Ghost: function (tachId, frames, score) {
+    Ghost: function (id, tachId, frames, score) {
+      this.id = id
       this.tachId = tachId
       // this._firstFrame = firstFrame
       this.frames = frames
