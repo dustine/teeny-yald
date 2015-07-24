@@ -179,7 +179,7 @@ $(() => {
       .css('text-align', 'center')
       .text('Paused')
       .textColor('rgba(0, 0, 0, 0.5)')
-      .textFont({family: 'Open Sans', size: '10em'})
+      .textFont({size: '10em'})
     Crafty.e('2D, DOM, Color, PauseScreen, Mouse, Keyboard')
       .attr({x: 0, y: 0, w: WIDTH, h: HEIGHT, z: 2000})
       .color('rgba(128, 128, 128, 0.5)')
@@ -375,38 +375,80 @@ $(() => {
   Crafty.background('black')
 
   // GUI
+  Crafty.c('gui-text', {
+    init () {
+      this.requires('2D, DOM, Text, gui')
+        .text('gui-text')
+        .attr('w', WIDTH)
+        .textColor('#ffffff')
+        .textFont({size: '4rem'})
+    }
+  })
 
   Crafty.c('gui-button', {
     init () {
       this.requires('2D, DOM, Mouse, Keyboard')
-      this.bind('Change', this._change)
+      this.bind('Change', this._userChange)
+      this.origin('center')
+      this._text = Crafty.e('2D, DOM, gui-button-text')
+        // .text('gui-button')
+        // .attr({w: this.w, h: this.h})
+        // MEH: Forces the text to center, alongside the extra css code
+        // .css({
+        //   height: 'inherit',
+        //   width: 'inherit'
+        // })
+        // .textColor('white')
+        // .textFont('size', '4rem')
+        // .unselectable()
+      this.attach(this._text)
       this.attr({
+        x: 0,
+        y: 0,
         selected: false,
         colorFrom: 'blue',
         colorTo: 'darkBlue',
         w: 400,
-        h: 100,
+        h: 50,
         action: function () {}
       })
+      // console.error(this._text)
+      var $text = $(this._text._element)
+      $text.html('gui-button')
 
+      let self = this
       this.bind('Click', this._action)
       this.bind('KeyDown', this._keyDown)
-      this._text = Crafty.e('2D, DOM, Text, gui-button-text')
-        .text('Hello')
-        .textColor('#ffffff')
-        .textFont({'family': 'Open Sans', size: '4em'})
-        .bind('Change', function (changed) {
+      this.bind('MouseOver', () => {
+        Crafty.trigger('MouseOverButton', this)
+        self.attr('selected', true)
       })
-      this.attach(this._text)
+      this.bind('MouseOut', () => {
+        // self.attr('selected', false)
+      })
+      this.bind('MouseOverButton', () => {
+        self.attr('selected', false)
+      })
     },
     _action () {
       this.action()
     },
-    _change (changed) {
+    _userChange (changed) {
       // console.log(changed, changed.keys)
       if (changed.hasOwnProperty('colorFrom') ||
         changed.hasOwnProperty('colorTo')) {
         this._setColors(changed.colorFrom, changed.colorTo)
+      }
+      if (changed.hasOwnProperty('h')) {
+        var $text = $(this._text._element)
+        $text.css('line-height', changed.h + 'px')
+      }
+      if (changed.hasOwnProperty('selected')) {
+        if (changed.selected) {
+          this.addComponent('selected')
+        } else {
+          this.removeComponent('selected')
+        }
       }
       // if(changed.hasOwnProperty('colorFrom'))
     },
@@ -422,14 +464,13 @@ $(() => {
         'background': `linear-gradient(to bottom, ${colorFrom} 0%, ${colorTo} 100%)`
       })
     },
-    click () {},
     select () {
-      this.toggleComponent('selected')
-      this.selected = !this.selected
+      this.attr('selected', !this.selected)
       return this
     },
     text (text) {
-      this._text.text(text)
+      var $text = $(this._text._element)
+      $text.html(text)
       return this
     },
     textSize (size) {
@@ -441,18 +482,15 @@ $(() => {
   let loops = 1
 
   Crafty.scene('Menu', function () {
-    Crafty.e('2D, DOM, Text')
+    Crafty.e('gui-text')
       .text('Teeny Yald')
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '6em'})
-      .attr({w: WIDTH, y: 40})
-      .css('text-align', 'center')
-    // Crafty.e('2D, DOM, Text')
-    //   .text('Score: ' + player.score)
-    //   .textColor('#ffffff')
-    //   .textFont({'family': 'Open Sans', size:'3em'})
-    //   .attr({w: WIDTH, y:240})
-    //   .css('text-align', 'center')
+      .textFont({size: '12rem'})
+      .attr('y', 60)
+    Crafty.e('gui-text')
+      .text(require('./game/catchphrases'))
+      .textFont({size: '4rem'})
+      .attr('y', 200)
+    // start
     Crafty.e('gui-button')
       .text('Start')
       .attr({
@@ -465,6 +503,17 @@ $(() => {
         }
       })
       .select()
+    Crafty.e('gui-button')
+      .text('Hello')
+      .attr({
+        x: (WIDTH - 400) / 2,
+        y: (HEIGHT - 100) / 2 + 175,
+        colorFrom: 'rgb(84, 193, 188)',
+        colorTo: 'rgb(19, 154, 150)',
+        action: () => {
+          alert('Hello!')
+        }
+      })
   })
 
   Crafty.scene('Start', function () {
@@ -480,35 +529,17 @@ $(() => {
   }, function () {
     // # DEBUG
     // Debug commands
-    if (DEBUG) {
-      // Crafty('Quark').each(function () {
-      //   this.addComponent('WiredHitBox')
-      // })
-      // player.addComponent('WiredHitBox')
-      // player.addComponent('Keyboard')
-      // player.bind('KeyDown', function (ke) {
-      //   if (ke.key === Crafty.keys.R) {
-      //     this.x = WIDTH / 2 - PLAYER_RADIUS
-      //     this.y = HEIGHT / 2 - PLAYER_RADIUS
-      //   } else if (ke.key === Crafty.keys.Q) {
-      //     console.log(this.x, this.y)
-      //   } else if (ke.key === Crafty.keys.C) {
-      //     // if (Crafty._current === 'Loop') {
-      //     //   Crafty.scene('Scratch')
-      //     // }
-      //     // player.toggleComponent('Paradoxy')
-      //   }
-      // })
-      Crafty.e('Tachyon')
-        .type('White')
-        .whiteTachyon({
-          id: 0,
-          speed: 4,
-          angle: Math.random() * Math.PI * 2 - Math.PI,
-          origin: {x: WIDTH * 3 / 4, y: HEIGHT * 3 / 4}
-        })
-        .addComponent('Paradoxy')
-    }
+    // if (DEBUG) {
+    //   Crafty.e('Tachyon')
+    //     .type('White')
+    //     .whiteTachyon({
+    //       id: 0,
+    //       speed: 4,
+    //       angle: Math.random() * Math.PI * 2 - Math.PI,
+    //       origin: {x: WIDTH * 3 / 4, y: HEIGHT * 3 / 4}
+    //     })
+    //     .addComponent('Paradoxy')
+    // }
     spawner = Crafty.e('Spawner')
       .spawner(GAME_LENGTH)
   })
@@ -557,10 +588,29 @@ $(() => {
         bestTime.i = i
       }
     }
-    bestScore = 'Best Score: Attempt ' + (bestScore.i + 1) + ', ' +
+    bestScore = 'Best Score: Run ' + (bestScore.i + 1) + ', ' +
       bestScore.score.toFixed(0)
-    bestTime = 'Best Time: Attempt ' + (bestTime.i + 1) + ', ' +
+    bestTime = 'Best Time: Run ' + (bestTime.i + 1) + ', ' +
       formatTime(bestTime.time)
+
+    for (let i = 0; i < 10; i++) {
+      runs.push({
+        score: Math.random() * 1000000
+      })
+    }
+
+    // TODO: Highscores from yourself
+    runs.sort((a, b) => {
+      // backwards to avoid a .reverse()
+      if (a.score > b.score) {
+        return -1
+      }
+      if (a.score < b.score) {
+        return 1
+      }
+      return 0
+    })
+    console.log(runs)
 
     return {score, bestScore, bestTime}
   }
@@ -574,44 +624,24 @@ $(() => {
     spawner.destroy()
     // show gameover screen
     let scores = gameOverText()
-    Crafty.e('2D, DOM, Text')
+    Crafty.e('gui-text')
       .text('Game Over')
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '10em'})
-      .attr({w: WIDTH, y: 40})
-      .css('text-align', 'center')
-    Crafty.e('2D, DOM, Text')
+      .textFont({size: '10rem'})
+      .attr({y: 40})
+    Crafty.e('gui-text')
       .text(scores.score)
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '3em'})
-      .attr({w: WIDTH, y: 240})
-      .css('text-align', 'center')
-    Crafty.e('2D, DOM, Text')
+      .textFont({size: '3rem'})
+      .attr({y: 160})
+    Crafty.e('gui-text')
       .text(scores.bestScore + '<br>' + scores.bestTime)
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '1.5em'})
-      .attr({w: WIDTH, y: 300})
-      .css('text-align', 'center')
+      .textFont({size: '2rem'})
+      .attr({y: 200})
 
-    // Crafty.e('gui-button')
-    //   .text('Watch Replay')
-    //   .textSize('size', '1em')
-    //   .attr({
-    //     x: (WIDTH - 400) / 2,
-    //     y: (HEIGHT - 20) / 2 + 150,
-    //     w: 200,
-    //     h: 50,
-    //     colorFrom: 'darkRed',
-    //     colorTo: '#5d0000',
-    //     action: function () {
-    //       this.text('Not implemented yet, sorry!')
-    //     }
-    //   })
     Crafty.e('gui-button')
       .text('Restart')
       .attr({
         x: (WIDTH - 400) / 2,
-        y: (HEIGHT - 100) / 2 + 225,
+        y: (HEIGHT - 100) / 2 + 150,
         colorFrom: 'darkRed',
         colorTo: '#5d0000',
         action: () => {
@@ -619,6 +649,16 @@ $(() => {
         }
       })
       .select()
+    Crafty.e('gui-button')
+      .text('Show Replay')
+      .attr({
+        x: (WIDTH - 400) / 2,
+        y: (HEIGHT - 100) / 2 + 225,
+        colorFrom: 'darkRed',
+        colorTo: '#5d0000',
+        action: () => {
+        }
+      })
   })
 
   Crafty.scene('GameWon', function () {
@@ -632,24 +672,18 @@ $(() => {
     updateTimebarProgress(1, 1)
     // show gamewon screen
     let scores = gameOverText()
-    Crafty.e('2D, DOM, Text')
+    Crafty.e('gui-text')
       .text('You Win!')
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '10em'})
-      .attr({w: WIDTH, y: 40})
-      .css('text-align', 'center')
-    Crafty.e('2D, DOM, Text')
+      .textFont({size: '10rem'})
+      .attr({y: 40})
+    Crafty.e('gui-text')
       .text(scores.score)
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '3em'})
-      .attr({w: WIDTH, y: 240})
-      .css('text-align', 'center')
-    Crafty.e('2D, DOM, Text')
+      .textFont({size: '3rem'})
+      .attr({y: 240})
+    Crafty.e('gui-text')
       .text(scores.bestScore + '<br>' + scores.bestTime)
-      .textColor('#ffffff')
-      .textFont({'family': 'Open Sans', size: '1.5em'})
-      .attr({w: WIDTH, y: 300})
-      .css('text-align', 'center')
+      .textFont({size: '2rem'})
+      .attr({y: 300})
 
     Crafty.e('gui-button')
       .text('Restart')
@@ -663,6 +697,16 @@ $(() => {
         }
       })
       .select()
+    Crafty.e('gui-button')
+      .text('Show Replay')
+      .attr({
+        x: (WIDTH - 400) / 2,
+        y: (HEIGHT - 100) / 2 + 225,
+        colorFrom: 'rgb(84, 193, 188)',
+        colorTo: 'rgb(19, 154, 150)',
+        action: () => {
+        }
+      })
   })
 
   // Start the game proper!

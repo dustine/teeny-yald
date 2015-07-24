@@ -6,5 +6,5 @@
 import bootstrap from 'bootstrap-sass'
 
 $(() => {
-  console.log('Welcome to Yeogurt!')
+  // console.log('Welcome to Yeogurt!')
 })

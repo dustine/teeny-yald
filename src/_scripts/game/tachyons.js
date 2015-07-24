@@ -1,13 +1,13 @@
 'use strict'
 
-// function scale (val, from, to) {
-//   return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
-// }
+function scale (val, from, to) {
+  return (val - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0]
+}
 
 module.exports = function (Crafty,
   {WIDTH: WIDTH, HEIGHT: HEIGHT, BORDER: BORDER, SPAWN_BORDER: SPAWN_BORDER,
     DESPAWN_BORDER: DESPAWN_BORDER, TACHYON_SIZE: SIZE}) {
-  // const FPS = Crafty.timer.FPS()
+  const FPS = Crafty.timer.FPS()
   const FADE_TIME = 2000
 
   Crafty.c('Tachyon', {
@@ -105,7 +105,7 @@ module.exports = function (Crafty,
       this._angle = angle
       this._speed = speed
       if (paradoxy) {
-        this.addComponent('Paradoxy')
+        this.addComponent('paradoxy')
       }
       this.x = origin.x - Math.round(SIZE / 2)
       this.y = origin.y - Math.round(SIZE / 2)
@@ -129,40 +129,57 @@ module.exports = function (Crafty,
     }
   })
 
-  Crafty.c('Paradoxy', {
+  Crafty.c('paradoxy', {
     init () {
-      // console.log(this._speed, this._angle * 180 / Math.PI)
-      let angle = Math.PI - (this._angle + Math.PI * 3 / 2)
-      this.requires('Particles')
-      this.particles({
-        maxParticles: 100,
-        size: SIZE * 4,
-        sizeRandom: SIZE,
-        speed: this._speed / 2,
-        speedRandom: 1.2,
-        // Lifespan in frames
-        lifeSpan: 29,
-        lifeSpanRandom: 7,
-        // Angle is calculated clockwise: 12pm is 0deg, 3pm is 90deg etc.
-        angle: angle * 180 / Math.PI || 0,
-        angleRandom: 0,
-        startColour: [128, 128, 128, 0.5],
-        startColourRandom: [128, 128, 128, 0],
-        endColour: [128, 128, 128, 0],
-        endColourRandom: [64, 64, 64, 0],
-        // Only applies when fastMode is off, specifies how sharp the gradients are drawn
-        sharpness: 20,
-        sharpnessRandom: 10,
-        // Random spread from origin
-        spread: 10,
-        // How many frames should this last
-        duration: -1,
-        // Will draw squares instead of circle gradients
-        fastMode: false,
-        gravity: { x: 0, y: 0 },
-        // sensible values are 0-3
-        jitter: 0
+      let self = this
+      this.requires('DOM')
+      this.step = 0
+      this.maxStep = 0.5 * FPS
+      this.fromHue = 111
+      this.toHue = 156
+      this.css('box-shadow', `0 0 20px 10px hsl(${this.fromHue}, 60%, 60%)`)
+      this.bind('EnterFrame', () => {
+        let hue = scale(self.step, [0, self.maxStep], [self.fromHue, self.toHue])
+        self.css('box-shadow', `0 0 20px 10px hsl(${Math.round(hue)}, 60%, 60%)`)
+        if (self.step++ >= self.maxStep) {
+          // reset
+          self.step = 0
+          self.fromHue = self.toHue
+          self.toHue = Math.round(Math.random() * 255)
+        }
       })
+      // console.log(this._speed, this._angle * 180 / Math.PI)
+      // let angle = Math.PI - (this._angle + Math.PI * 3 / 2)
+      // this.requires('Particles')
+      // this.particles({
+      //   maxParticles: 100,
+      //   size: SIZE * 4,
+      //   sizeRandom: SIZE,
+      //   speed: this._speed / 2,
+      //   speedRandom: 1.2,
+      //   // Lifespan in frames
+      //   lifeSpan: 29,
+      //   lifeSpanRandom: 7,
+      //   // Angle is calculated clockwise: 12pm is 0deg, 3pm is 90deg etc.
+      //   angle: angle * 180 / Math.PI || 0,
+      //   angleRandom: 0,
+      //   startColour: [128, 128, 128, 0.5],
+      //   startColourRandom: [128, 128, 128, 0],
+      //   endColour: [128, 128, 128, 0],
+      //   endColourRandom: [64, 64, 64, 0],
+      //   // Only applies when fastMode is off, specifies how sharp the gradients are drawn
+      //   sharpness: 20,
+      //   sharpnessRandom: 10,
+      //   // Random spread from origin
+      //   spread: 10,
+      //   // How many frames should this last
+      //   duration: -1,
+      //   // Will draw squares instead of circle gradients
+      //   fastMode: false,
+      //   gravity: { x: 0, y: 0 },
+      //   // sensible values are 0-3
+      //   jitter: 0
+      // })
     }
   })
 

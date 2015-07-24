@@ -19,7 +19,7 @@ $metal: linear-gradient(to bottom, $metal-0 0%, $metal-1 21%, $metal-2 49%, $met
   color: $container-text;
   // left: 50%;
   // margin-right: -50%;
-  pointer-events: none;
+  // pointer-events: none;
   // position: absolute;
   // top: 50%;
   // transform: translate(-50%, -50%);
@@ -56,11 +56,12 @@ $metal: linear-gradient(to bottom, $metal-0 0%, $metal-1 21%, $metal-2 49%, $met
   border-width: 0 10px;
 }
 
-.gui-button {
+&.gui-centered {
+  text-align: center;
+}
+
+&.gui-button {
   border-radius: .5em;
-  // display: table-cell;
-  // height: 200px;
-  // vertical-align: middle;
 
   &.selected,
   &:hover {
@@ -68,9 +69,16 @@ $metal: linear-gradient(to bottom, $metal-0 0%, $metal-1 21%, $metal-2 49%, $met
   }
 }
 
-.gui-button-text {
-  // line-height: 100px;
+$button-text: #fff;
+
+&.gui-button-text {
+  color: $button-text;
+  font-size: 4rem;
   text-align: center;
+}
+
+.paradoxy {
+  box-shadow: 0 0 20px 10px rgb(128, 128, 128);
 }
 
 .score-display,

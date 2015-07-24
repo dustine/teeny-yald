@@ -247,7 +247,7 @@ module.exports = function (Crafty,
     regenerate: function (info, ghost) {
       // this._firstFrame = ghost._firstFrame
       this.frame = ghost.frame
-      this.frames = ghost.frames
+      this.frames = ghost.frames.slice(0, ghost.frame)
       this.x = ghost.x
       this.y = ghost.y
       console.log(info.score, ghost.score)
